@@ -8,6 +8,10 @@
     "build": "webpack --config webpack.production.config.js",
     "dev": "webpack --config webpack.dev.config.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/callmesoul/frontend-sniper-explorer"
+  },
   "author": "CallMeSoul",
   "license": "MIT",
   "devDependencies": {
