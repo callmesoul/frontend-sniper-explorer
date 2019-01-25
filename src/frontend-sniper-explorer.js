@@ -12,6 +12,7 @@ class explorer{
             filters: [], // 过滤器，命中的不上报
             levels: ['info', 'warning', 'error'],
             category: ['js', 'resource', 'ajax'],
+            submitUrl:''
         };
         this._window = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
         this.addEventListener = this._window.addEventListener || this._window.attachEvent;
@@ -127,12 +128,16 @@ class explorer{
             return _oldFetch.apply(this, arguments)
                 .then(res => {
                     if (!res.ok) { // True if status is HTTP 2xx
-                        config.sendError({
-                            title: arguments[0],
-                            msg: JSON.stringify(res),
-                            category: 'fetch',
-                            level: 'error'
-                        });
+                        if(res.url===config.submitUrl){
+                            console.log('提交错误报错，请检查后台frontend-sniper-server是否运行正常');
+                        }else{
+                            config.sendError({
+                                title: arguments[0],
+                                msg: JSON.stringify(res),
+                                category: 'fetch',
+                                level: 'error'
+                            });
+                        }
                     }
                     return res;
                 })
@@ -155,6 +160,7 @@ class explorer{
     handleAjaxError(_window, config) {
         var protocol = _window.location.protocol;
         if (protocol === 'file:') return;
+        console.log('ajax');
 
         // 处理fetch
         this._handleFetchError(_window, config);
@@ -169,17 +175,22 @@ class explorer{
 
         let _handleEvent = function (event) {
             if (event && event.currentTarget && event.currentTarget.status !== 200) {
-                config.sendError({
-                    title: event.target.responseURL,
-                    msg: JSON.stringify({
-                        response: event.target.response,
-                        responseURL:  event.target.responseURL,
-                        status: event.target.status,
-                        statusText: event.target.statusText
-                    }),
-                    category: 'ajax',
-                    level: 'error'
-                });
+                if(event.target.responseURL===config.submitUrl){
+                    console.log('提交错误报错，请检查后台frontend-sniper-server是否运行正常');
+                }else{
+                    config.sendError({
+                        title: event.target.responseURL,
+                        msg: JSON.stringify({
+                            response: event.target.response,
+                            responseURL:  event.target.responseURL,
+                            status: event.target.status,
+                            statusText: event.target.statusText
+                        }),
+                        category: 'ajax',
+                        level: 'error'
+                    });
+                }
+
             }
         };
 
