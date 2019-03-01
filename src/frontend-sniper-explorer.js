@@ -215,7 +215,6 @@ class explorer{
     /*监听Console 错误*/
     handleConsoleError(_window, config) {
         if (!_window.console || !_window.console.error) return;
-
         let _oldConsoleError = _window.console.error;
         _window.console.error = function () {
             config.sendError({

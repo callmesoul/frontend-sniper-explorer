@@ -6,8 +6,8 @@ explorer.start({
             method: "POST",
             headers: {
                 'Content-Type': 'application/json',
-                'appId':'',//使用 frontend-sniper时
-                'appScrect':''//使用 frontend-sniper时
+                'appId':'f9ed9f90-3b21-11e9-8bb4-156d2c6ff87c',//使用 frontend-sniper时
+                'appScrect':'f9ed9f91-3b21-11e9-8bb4-156d2c6ff87c'//使用 frontend-sniper时
             },
             body:JSON.stringify(e),
         }).then(res => res.json())
