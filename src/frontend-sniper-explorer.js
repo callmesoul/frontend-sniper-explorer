@@ -110,6 +110,7 @@ class explorer{
                 if (!isElementTarget) return; // js error不再处理
 
                 let url = target.src || target.href;
+                debugger;
                 config.sendError({
                     title: target.nodeName,
                     msg: url,
