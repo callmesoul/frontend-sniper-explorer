@@ -1,6 +1,6 @@
 {
   "name": "frontend-sniper-explorer",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "前端错误探针",
   "main": "lib/frontend-sniper-explorer.js",
   "scripts": {
