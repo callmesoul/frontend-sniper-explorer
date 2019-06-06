@@ -1,4 +1,4 @@
-
+import { record, Replayer } from 'rrweb'
 class explorer{
     constructor() {
         this.config = {
@@ -12,10 +12,13 @@ class explorer{
             filters: [], // 过滤器，命中的不上报
             levels: ['info', 'warning', 'error'],
             category: ['js', 'resource', 'ajax'],
+            record:false,//是否录制
             submitUrl:''
         };
         this._window = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
         this.addEventListener = this._window.addEventListener || this._window.attachEvent;
+        this._window.recordEvent=[];//录制事件
+        this._window.eventBackUp=[];//录制时间备份
     }
 
     isFunction(what) {return typeof what === 'function';}
@@ -29,6 +32,15 @@ class explorer{
         }
         if (!this.config.scriptError) {
             this.config.filters.push(function () {return /^Script error\.?$/.test(arguments[0]);})
+        }
+
+        // 开始录制
+        console.log('===========');
+        console.log(this.config.record);
+        console.log(options);
+        if(this.config.record){
+            debugger;
+            this.startRecord();
         }
 
         // 处理过滤器
@@ -54,6 +66,24 @@ class explorer{
         }
     }
 
+
+    startRecord(){
+        record({
+            emit:(event) =>{
+                /*
+                如果事件大于30时，先备份再清空，以防出现错误时，事件过少无法还原错误发生过程，此时可从备份取回部分录制事件
+                */
+                if(this._window.recordEvent.length>=100){
+                    this._window.eventBackUp=JSON.parse(JSON.stringify(this._window.recordEvent));
+                    this._window.recordEvent=[];
+                }else{
+                    this._window.recordEvent.push(event);
+                }
+                // 用任意方式存储 event
+            },
+        });
+    }
+
     /*监听windows错误*/
     handleWindowError(_window, config) {
         let _oldWindowError = _window.onerror;
@@ -65,7 +95,7 @@ class explorer{
                     category: 'js',
                     level: 'error',
                     line: line,
-                    col:col
+                    col:col,
                 });
             } else if (typeof msg === 'string') {
                 config.sendError({
@@ -95,7 +125,7 @@ class explorer{
                     title: 'unhandledrejection',
                     msg: reason,
                     category: 'js',
-                    level: 'error'
+                    level: 'error',
                 });
             }
         }, true);
