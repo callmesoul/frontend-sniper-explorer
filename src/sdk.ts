@@ -279,7 +279,11 @@ export class SDK {
         const functionName: string = `getUserInfoCallBack`
         // @ts-ignore
         window[functionName] = params.callback
-        this.appMetaidjs?.getUserInfo(this.appId, this.appScrect, functionName)
+        if ((window as any).appMetaIdJsV2) {
+          (window as any).appMetaIdJsV2?.getUserInfo(this.appId, this.appScrect, functionName)
+        } else {
+          (window as any).appMetaIdJs?.getUserInfo(this.appId, this.appScrect, functionName)
+        }
       } else if (SdkType.Metaidjs) {
         this.metaidjs?.getUserInfo(params)
       } else {
@@ -312,11 +316,19 @@ export class SDK {
         const functionName: string = `sendMetaDataTxCallBack`
         // @ts-ignore
         window[functionName] = params.callback
-        this.appMetaidjs?.sendMetaDataTx(
-          accessToken,
-          JSON.stringify(params),
-          functionName
-        )
+        if ((window as any).appMetaIdJsV2) {
+          (window as any).appMetaIdJsV2?.sendMetaDataTx(
+            accessToken,
+            JSON.stringify(params),
+            functionName
+          )
+        } else {
+          (window as any).appMetaIdJs?.sendMetaDataTx(
+            accessToken,
+            JSON.stringify(params),
+            functionName
+          )
+        }
       } else {
         const _params = {
           callback: (res: MetaIdJsRes) => {
@@ -361,7 +373,11 @@ export class SDK {
         const functionName: string = `eciesDecryptDataCallBack`
         // @ts-ignore
         window[functionName] = _params.callback
-        this.appMetaidjs?.decryptData(_params.accessToken, data, functionName)
+        if ((window as any).appMetaIdJsV2) {
+          (window as any).appMetaIdJsV2?.decryptData(_params.accessToken, data, functionName)
+        } else {
+          (window as any).appMetaIdJs?.decryptData(_params.accessToken, data, functionName)
+        }
       } else if (this.type === SdkType.Metaidjs) {
         this.metaidjs?.eciesDecryptData(_params)
       } else {
@@ -376,6 +392,24 @@ export class SDK {
   getBalance() {
     return new Promise<GetBalanceRes>((resolve) => {
       if (this.isApp) {
+        const token = this.getAccessToken()
+        const functionName = 'getBalanceCallBack';
+        (window as any)[functionName] = (_res: string) => {
+          const res = JSON.parse(_res)
+          const bsv = res.data
+          this.callback({
+            code: res.code,
+            data: {
+              bsv: bsv,
+              satoshis: new Decimal(bsv).mul(Math.pow(10, 8))
+            }
+          }, resolve)
+        }
+        if ((window as any).appMetaIdJsV2) {
+          (window as any).appMetaIdJsV2?.getBalance(token, functionName)
+        } else {
+          (window as any).appMetaIdJs?.getBalance(token, functionName)
+        }
       } else {
         //@ts-ignore
         this.metaidjs.getBalance({
@@ -698,14 +732,22 @@ export class SDK {
         }
       }
       if (this.isApp) {
-        const functionName: string = `genesisNFTCallBack`
-        window[functionName] = _params.callback
+        const functionName: string = `genesisNFTCallBack`;
+        (window as any)[functionName] = _params.callback
         const accessToken = this.getAccessToken()
-        this.appMetaidjs?.genesisNFT(
-          accessToken,
-          JSON.stringify(_params.data),
-          functionName
-        )
+        if ((window as any).appMetaIdJsV2) {
+          (window as any).appMetaIdJsV2.genesisNFT(
+            accessToken,
+            JSON.stringify(_params.data),
+            functionName
+          )
+        } else {
+          (window as any).appMetaIdJs.genesisNFT(
+            accessToken,
+            JSON.stringify(_params.data),
+            functionName
+          )
+        }
       } else {
         debugger
         // @ts-ignore
@@ -752,15 +794,22 @@ export class SDK {
         }
       }
       if (this.isApp) {
-        const functionName: string = `issueNFTCallBack`
-        // @ts-ignore
-        window[functionName] = _params.callback
+        const functionName: string = `issueNFTCallBack`;
+        (window as any)[functionName] = _params.callback
         const accessToken = this.getAccessToken()
-        this.appMetaidjs?.issueNFT(
-          accessToken,
-          JSON.stringify(_params.data),
-          functionName
-        )
+        if ((window as any).appMetaIdJsV2) {
+          (window as any).appMetaIdJsV2.issueNFT(
+            accessToken,
+            JSON.stringify(_params.data),
+            functionName
+          )
+        } else {
+          (window as any).appMetaIdJs.issueNFT(
+            accessToken,
+            JSON.stringify(_params.data),
+            functionName
+          )
+        }
       } else {
         // @ts-ignore
         this.metaidjs?.issueNFT(_params)
@@ -792,11 +841,21 @@ export class SDK {
         // @ts-ignore
         window[functionName] = _params.callback
         // @ts-ignore
-        this.appMetaidjs?.nftBuy(
-          accessToken,
-          JSON.stringify(_params.data),
-          functionName
-        )
+        if (window.appMetaIdJsV2) {
+          // @ts-ignore
+          window.appMetaIdJsV2.nftBuy(
+            accessToken,
+            JSON.stringify(_params.data),
+            functionName
+          )
+        } else {
+          // @ts-ignore
+          window.appMetaIdJs.nftBuy(
+            accessToken,
+            JSON.stringify(_params.data),
+            functionName
+          )
+        }
       } else {
         // @ts-ignore
         this.metaidjs?.nftBuy(_params)
@@ -823,11 +882,21 @@ export class SDK {
         // @ts-ignore
         window[functionName] = _params.callback
         // @ts-ignore
-        this.appMetaidjs?.nftSell(
-          accessToken,
-          JSON.stringify(_params.data),
-          functionName
-        )
+        if (window.appMetaIdJsV2) {
+          // @ts-ignore
+          window.appMetaIdJsV2.nftSell(
+            accessToken,
+            JSON.stringify(_params.data),
+            functionName
+          )
+        } else {
+          // @ts-ignore
+          window.appMetaIdJs.nftSell(
+            accessToken,
+            JSON.stringify(_params.data),
+            functionName
+          )
+        }
       } else {
         // @ts-ignore
         this.metaidjs?.nftSell(_params)
@@ -854,12 +923,24 @@ export class SDK {
       if (this.isApp) {
         const accessToken = this.getAccessToken()
         const functionName: string = `nftCancelCallBack`
+        // @ts-ignore
         window[functionName] = _params.callback
-        this.appMetaidjs?.nftCancel(
-          accessToken,
-          JSON.stringify(_params.data),
-          functionName
-        )
+        // @ts-ignore
+        if (window.appMetaIdJsV2) {
+          // @ts-ignore
+          window.appMetaIdJsV2.nftCancel(
+            accessToken,
+            JSON.stringify(_params.data),
+            functionName
+          )
+        } else {
+          // @ts-ignore
+          window.appMetaIdJs.nftCancel(
+            accessToken,
+            JSON.stringify(_params.data),
+            functionName
+          )
+        }
       } else {
         debugger
         // @ts-ignore

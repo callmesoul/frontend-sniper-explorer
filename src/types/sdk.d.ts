@@ -48,11 +48,11 @@ export interface CreateMetaFileFunParams extends NftFunParams{
         data_type: string
     }
 }
-export interface MetaIdJsRes extends NftFunParams{
+export interface MetaIdJsRes {
     code: number
     data: any
-    status: string
-    handlerId: string
+    status?: string
+    handlerId?: string
     appAccessToken?: string 
 }
 export interface SdkGenesisNFTRes extends MetaIdJsRes{
