@@ -31,7 +31,6 @@ import {
 } from './types/sdk'
 import { Lang, SdkType } from './emums'
 
-
 export class SDK {
   metaidjs: null | MetaIdJs = null
   appMetaidjs: null | {
@@ -76,7 +75,7 @@ export class SDK {
       functionName: string
     ) => Function
   } = null
-  dotwalletjs: DotWallet
+  dotwalletjs: DotWallet | null = null
   isApp: boolean = false
   appId: string = ''
   appScrect: string = ''
@@ -84,19 +83,20 @@ export class SDK {
   showmoneyApi: string = ''
   type: SdkType = SdkType.Metaidjs
   initIng: boolean = false
+  appOptions: { clientId: string; clientSecret: string }
   metaidjsOptions: SdkMetaidJsOptionsTypes
   dotwalletOptions: DotWalletConfig
   getAccessToken: Function // 获取token的方法， 保持最新
-  callBackFail?: (error: MetaIdJsRes) => Promise<void> | null = null // 统一回调错误处理
-  axios: AxiosInstance
-  nftAppAddress: '16tp7PhBjvYpHcv53AXkHYHTynmy6xQnxy' // Nft收手续费的地址
+  callBackFail?: (error: MetaIdJsRes) => Promise<void> | null = undefined // 统一回调错误处理
+  axios: AxiosInstance | null = null
+  nftAppAddress = '16tp7PhBjvYpHcv53AXkHYHTynmy6xQnxy' // Nft收手续费的地址
 
   constructor(options: {
     type: SdkType
     metaIdTag: string
     showmoneyApi: string
     getAccessToken: Function
-    callBackFail: (error) => Promise<void>
+    callBackFail: (error: MetaIdJsRes) => Promise<void>
     appOptions: {
       clientId: string
       clientSecret: string
@@ -108,6 +108,8 @@ export class SDK {
     this.getAccessToken = options.getAccessToken
     this.metaidjsOptions = options.metaidjsOptions
     this.dotwalletOptions = options.dotwalletOptions
+    this.showmoneyApi = options.showmoneyApi
+    this.appOptions = options.appOptions
     if (options.callBackFail) this.callBackFail = options.callBackFail
     // 初始化是否App环境
     // @ts-ignore
@@ -137,7 +139,7 @@ export class SDK {
             this.initIng = false
             resolve()
           },
-          onError: (error) => {
+          onError: (error: MetaIdJsRes) => {
             this.initIng = false
             reject(error)
           }
@@ -157,11 +159,18 @@ export class SDK {
   changeSdkType(type: SdkType) {
     this.type = type
     if (type === SdkType.Dotwallet) {
-      this.appId = this.dotwalletOptions.clientID
-      this.appScrect = this.dotwalletOptions.clientSecret
+      if (this.dotwalletOptions) {
+        this.appId = this.dotwalletOptions.clientID
+        this.appScrect = this.dotwalletOptions.clientSecret
+      } else {
+        new Error('未设置dotwalletOptions')
+      }
+    } else if (type === SdkType.App) {
+      this.appId = this.appOptions.clientId
+      this.appScrect = this.appOptions.clientSecret
     } else {
-      this.appId = this.metaidjsOptions.oauthSettings.clientId
-      this.appScrect = this.metaidjsOptions.oauthSettings.clientSecret
+      this.appId = this.appOptions.clientId
+      this.appScrect = this.appOptions.clientSecret
     }
   }
 
@@ -172,7 +181,7 @@ export class SDK {
   // 初始化Api配置
   initAxiosConfig() {
     this.axios = axios.create({
-      baseURL: this.metaidjsOptions.baseApiUrl
+      baseURL: this.showmoneyApi
     })
     // 添加响应拦截器
     this.axios.interceptors.response.use(
@@ -199,7 +208,11 @@ export class SDK {
       const url = `${this.metaidjsOptions.baseUri}/userLogin?response_type=code&client_id=${this.appId}&redirect_uri=${this.metaidjsOptions.redirectUrl}&scope=app&from=${this.metaidjsOptions.redirectUrl}`
       window.location.href = url
     } else {
-      this.dotwalletjs.login()
+      if (this.dotwalletjs) {
+        this.dotwalletjs.login()
+      } else {
+        new Error('未初始化 dotwalletjs')
+      }
     }
   }
 
@@ -210,7 +223,7 @@ export class SDK {
       return
     }
     if (this.type === SdkType.Metaidjs) {
-      return this.axios.post(
+      return this.axios?.post(
         '/showmoney/oauth2/oauth/token',
         {
           code: params.code,
@@ -232,7 +245,7 @@ export class SDK {
         }
       )
     } else {
-      return this.dotwalletjs.getToken(params)
+      return this.dotwalletjs?.getToken(params)
     }
   }
 
@@ -280,9 +293,17 @@ export class SDK {
         // @ts-ignore
         window[functionName] = params.callback
         if ((window as any).appMetaIdJsV2) {
-          (window as any).appMetaIdJsV2?.getUserInfo(this.appId, this.appScrect, functionName)
+          ;(window as any).appMetaIdJsV2?.getUserInfo(
+            this.appId,
+            this.appScrect,
+            functionName
+          )
         } else {
-          (window as any).appMetaIdJs?.getUserInfo(this.appId, this.appScrect, functionName)
+          ;(window as any).appMetaIdJs?.getUserInfo(
+            this.appId,
+            this.appScrect,
+            functionName
+          )
         }
       } else if (SdkType.Metaidjs) {
         this.metaidjs?.getUserInfo(params)
@@ -317,13 +338,13 @@ export class SDK {
         // @ts-ignore
         window[functionName] = params.callback
         if ((window as any).appMetaIdJsV2) {
-          (window as any).appMetaIdJsV2?.sendMetaDataTx(
+          ;(window as any).appMetaIdJsV2?.sendMetaDataTx(
             accessToken,
             JSON.stringify(params),
             functionName
           )
         } else {
-          (window as any).appMetaIdJs?.sendMetaDataTx(
+          ;(window as any).appMetaIdJs?.sendMetaDataTx(
             accessToken,
             JSON.stringify(params),
             functionName
@@ -374,9 +395,17 @@ export class SDK {
         // @ts-ignore
         window[functionName] = _params.callback
         if ((window as any).appMetaIdJsV2) {
-          (window as any).appMetaIdJsV2?.decryptData(_params.accessToken, data, functionName)
+          ;(window as any).appMetaIdJsV2?.decryptData(
+            _params.accessToken,
+            data,
+            functionName
+          )
         } else {
-          (window as any).appMetaIdJs?.decryptData(_params.accessToken, data, functionName)
+          ;(window as any).appMetaIdJs?.decryptData(
+            _params.accessToken,
+            data,
+            functionName
+          )
         }
       } else if (this.type === SdkType.Metaidjs) {
         this.metaidjs?.eciesDecryptData(_params)
@@ -393,22 +422,25 @@ export class SDK {
     return new Promise<GetBalanceRes>((resolve) => {
       if (this.isApp) {
         const token = this.getAccessToken()
-        const functionName = 'getBalanceCallBack';
-        (window as any)[functionName] = (_res: string) => {
+        const functionName = 'getBalanceCallBack'
+        ;(window as any)[functionName] = (_res: string) => {
           const res = JSON.parse(_res)
           const bsv = res.data
-          this.callback({
-            code: res.code,
-            data: {
-              bsv: bsv,
-              satoshis: new Decimal(bsv).mul(Math.pow(10, 8))
-            }
-          }, resolve)
+          this.callback(
+            {
+              code: res.code,
+              data: {
+                bsv: bsv,
+                satoshis: new Decimal(bsv).mul(Math.pow(10, 8))
+              }
+            },
+            resolve
+          )
         }
         if ((window as any).appMetaIdJsV2) {
-          (window as any).appMetaIdJsV2?.getBalance(token, functionName)
+          ;(window as any).appMetaIdJsV2?.getBalance(token, functionName)
         } else {
-          (window as any).appMetaIdJs?.getBalance(token, functionName)
+          ;(window as any).appMetaIdJs?.getBalance(token, functionName)
         }
       } else {
         //@ts-ignore
@@ -732,17 +764,17 @@ export class SDK {
         }
       }
       if (this.isApp) {
-        const functionName: string = `genesisNFTCallBack`;
-        (window as any)[functionName] = _params.callback
+        const functionName: string = `genesisNFTCallBack`
+        ;(window as any)[functionName] = _params.callback
         const accessToken = this.getAccessToken()
         if ((window as any).appMetaIdJsV2) {
-          (window as any).appMetaIdJsV2.genesisNFT(
+          ;(window as any).appMetaIdJsV2.genesisNFT(
             accessToken,
             JSON.stringify(_params.data),
             functionName
           )
         } else {
-          (window as any).appMetaIdJs.genesisNFT(
+          ;(window as any).appMetaIdJs.genesisNFT(
             accessToken,
             JSON.stringify(_params.data),
             functionName
@@ -794,17 +826,17 @@ export class SDK {
         }
       }
       if (this.isApp) {
-        const functionName: string = `issueNFTCallBack`;
-        (window as any)[functionName] = _params.callback
+        const functionName: string = `issueNFTCallBack`
+        ;(window as any)[functionName] = _params.callback
         const accessToken = this.getAccessToken()
         if ((window as any).appMetaIdJsV2) {
-          (window as any).appMetaIdJsV2.issueNFT(
+          ;(window as any).appMetaIdJsV2.issueNFT(
             accessToken,
             JSON.stringify(_params.data),
             functionName
           )
         } else {
-          (window as any).appMetaIdJs.issueNFT(
+          ;(window as any).appMetaIdJs.issueNFT(
             accessToken,
             JSON.stringify(_params.data),
             functionName

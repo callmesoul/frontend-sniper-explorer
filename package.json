@@ -1,14 +1,15 @@
 {
   "name": "sdk",
-  "version": "0.0.1",
+  "version": "0.0.8",
   "description": "metaidjs sdk",
   "main": "dist/sdk.min.js",
+  "typings": "src/index.d.ts",
   "directories": {
     "example": "example"
   },
   "scripts": {
-    "build": "rollup -c",
-    "dev": "rollup -c -w",
+    "build": "rollup -c ./rollup.config.js",
+    "dev": "rollup -c -m -w",
     "test": "ts-node test/test.ts",
     "pretest": "npm run build"
   },
@@ -22,6 +23,9 @@
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^13.0.4",
     "@types/ms": "^0.7.31",
+    "rollup": "^2.56.3",
+    "rollup-plugin-node-builtins": "^2.1.2",
+    "rollup-plugin-polyfill-node": "^0.7.0",
     "rollup-plugin-typescript": "^1.0.1",
     "ts-node": "^10.2.1",
     "tslib": "^2.3.1",
@@ -32,6 +36,7 @@
     "decimal.js-light": "^2.5.1",
     "dotwallet-jssdk": "^1.2.7",
     "metaidjs": "^1.7.0",
-    "qs": "^6.10.1"
+    "qs": "^6.10.1",
+    "uuid": "^8.3.2"
   }
 }
