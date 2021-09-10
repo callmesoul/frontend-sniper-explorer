@@ -2,7 +2,7 @@
   "name": "sdk",
   "version": "0.0.1",
   "description": "metaidjs sdk",
-  "main": "src/index.js",
+  "main": "dist/sdk.min.js",
   "directories": {
     "example": "example"
   },
