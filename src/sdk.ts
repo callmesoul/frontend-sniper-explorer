@@ -205,7 +205,7 @@ export class SDK {
       new Error('App环境下没有login函数')
       return
     } else if (this.type === SdkType.Metaidjs) {
-      const url = `${this.metaidjsOptions.baseUri}/userLogin?response_type=code&client_id=${this.appId}&redirect_uri=${this.metaidjsOptions.oauthSettings.redirectUri}&scope=app&from=${this.metaidjsOptions.redirectUrl}`
+      const url = `${this.metaidjsOptions.baseUri}/userLogin?response_type=code&client_id=${this.appId}&redirect_uri=${this.metaidjsOptions.oauthSettings.redirectUri}&scope=app&from=${this.metaidjsOptions.oauthSettings.redirectUri}`
       window.location.href = url
     } else {
       if (this.dotwalletjs) {
@@ -217,7 +217,7 @@ export class SDK {
   }
 
   // getToken
-  getToken(params: { code: string; grantType?: string }) {
+  getToken(params: { code: string }) {
     if (this.type === SdkType.App) {
       new Error('App 环境 getToken 不可执行')
       return
@@ -228,7 +228,7 @@ export class SDK {
         {
           code: params.code,
           grant_type: 'authorization_code',
-          redirect_uri: this.metaidjsOptions.redirectUrl,
+          redirect_uri: this.metaidjsOptions.oauthSettings.redirectUri,
           scope: 'app',
           client_id: this.appId,
           client_secret: this.appScrect
@@ -256,7 +256,7 @@ export class SDK {
       return
     }
     if (this.type === SdkType.Metaidjs) {
-      return this.axios.post(
+      return this.axios?.post(
         '/showmoney/oauth2/oauth/token',
         {
           grant_type: 'refresh_token',
@@ -276,7 +276,7 @@ export class SDK {
         }
       )
     } else {
-      return this.dotwalletjs.refreshToken(params)
+      return this.dotwalletjs?.refreshToken(params)
     }
   }
 
