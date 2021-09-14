@@ -205,7 +205,7 @@ export class SDK {
       new Error('App环境下没有login函数')
       return
     } else if (this.type === SdkType.Metaidjs) {
-      const url = `${this.metaidjsOptions.baseUri}/userLogin?response_type=code&client_id=${this.appId}&redirect_uri=${this.metaidjsOptions.redirectUrl}&scope=app&from=${this.metaidjsOptions.redirectUrl}`
+      const url = `${this.metaidjsOptions.baseUri}/userLogin?response_type=code&client_id=${this.appId}&redirect_uri=${this.metaidjsOptions.oauthSettings.redirectUri}&scope=app&from=${this.metaidjsOptions.redirectUrl}`
       window.location.href = url
     } else {
       if (this.dotwalletjs) {

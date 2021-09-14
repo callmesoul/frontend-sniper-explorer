@@ -3,7 +3,6 @@ import { NFTIssueParamsIconType } from '../emums'
 
 export interface SdkMetaidJsOptionsTypes {
   baseUri: string
-  redirectUrl: string
   oauthSettings: SdkMetaidJsOauthSettingsTypes
 }
 export interface SdkMetaidJsOauthSettingsTypes {
