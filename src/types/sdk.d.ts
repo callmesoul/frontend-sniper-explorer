@@ -21,7 +21,13 @@ export interface BaseParamsType {
   callback?: Function
   onCancel?: Function
 }
-
+declare interface Token {
+  access_token: string
+  token_type?: string
+  refresh_token?: string
+  expires_in?: number
+  expires_time?: number
+}
 export interface appMetaIdJsParams {
   accessToken: string
   data: any

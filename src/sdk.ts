@@ -2,7 +2,11 @@ import MetaIdJs from 'metaidjs'
 // @ts-ignore
 import { v4 as uuid } from 'uuid'
 import { Decimal } from 'decimal.js-light'
-import DotWallet, { DotWalletConfig, ENV } from 'dotwallet-jssdk'
+import DotWallet, {
+  DotWalletConfig,
+  DotWalletToken,
+  ENV
+} from 'dotwallet-jssdk'
 import qs from 'qs'
 import axios, { AxiosInstance } from 'axios'
 import {
@@ -27,7 +31,8 @@ import {
   SdkGenesisNFTRes,
   SdkMetaidJsOptionsTypes,
   SellNFTParams,
-  SendMetaDataTxRes
+  SendMetaDataTxRes,
+  Token
 } from './types/sdk'
 import { Lang, SdkType } from './emums'
 
@@ -81,7 +86,7 @@ export class SDK {
   appScrect: string = ''
   metaIdTag: string = ''
   showmoneyApi: string = ''
-  type: SdkType = SdkType.Metaidjs
+  type: SdkType = SdkType.Null
   initIng: boolean = false
   appOptions: { clientId: string; clientSecret: string }
   metaidjsOptions: SdkMetaidJsOptionsTypes
@@ -145,7 +150,8 @@ export class SDK {
           }
         })
       } else if (this.type === SdkType.Dotwallet) {
-        this.dotwalletjs = new DotWallet(this.dotwalletOptions)
+        if (!this.dotwalletjs)
+          this.dotwalletjs = new DotWallet(this.dotwalletOptions)
         this.initIng = false
         resolve()
       } else {
@@ -155,6 +161,15 @@ export class SDK {
     })
   }
 
+  toWallet() {
+    let url = ''
+    if (this.type === SdkType.Dotwallet) {
+    } else {
+      url = this.metaidjsOptions.baseUri
+    }
+    window.open(url)
+  }
+
   // 更改 sdk 环境类型
   changeSdkType(type: SdkType) {
     this.type = type
@@ -162,6 +177,7 @@ export class SDK {
       if (this.dotwalletOptions) {
         this.appId = this.dotwalletOptions.clientID
         this.appScrect = this.dotwalletOptions.clientSecret
+        this.dotwalletjs = new DotWallet(this.dotwalletOptions)
       } else {
         new Error('未设置dotwalletOptions')
       }
@@ -172,10 +188,17 @@ export class SDK {
       this.appId = this.appOptions.clientId
       this.appScrect = this.appOptions.clientSecret
     }
+    window.localStorage.setItem('appType', type.toString())
   }
 
   isSdkFinish() {
-    return this.appMetaidjs || this.metaidjs || this.dotwalletjs
+    if (this.type === SdkType.App) {
+      return this.appMetaidjs ? true : false
+    } else if (this.type === SdkType.Metaidjs) {
+      return this.metaidjs ? true : false
+    } else if (this.type === SdkType.Dotwallet) {
+      return this.dotwalletjs ? true : false
+    }
   }
 
   // 初始化Api配置
@@ -209,7 +232,9 @@ export class SDK {
       window.location.href = url
     } else {
       if (this.dotwalletjs) {
-        this.dotwalletjs.login()
+        this.dotwalletjs.login({
+          scope: 'user.info autopay.bsv'
+        })
       } else {
         new Error('未初始化 dotwalletjs')
       }
@@ -218,35 +243,57 @@ export class SDK {
 
   // getToken
   getToken(params: { code: string }) {
-    if (this.type === SdkType.App) {
-      new Error('App 环境 getToken 不可执行')
-      return
-    }
-    if (this.type === SdkType.Metaidjs) {
-      return this.axios?.post(
-        '/showmoney/oauth2/oauth/token',
-        {
-          code: params.code,
-          grant_type: 'authorization_code',
-          redirect_uri: this.metaidjsOptions.oauthSettings.redirectUri,
-          scope: 'app',
-          client_id: this.appId,
-          client_secret: this.appScrect
-        },
-        {
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
-          },
-          transformRequest: [
-            function (data: object) {
-              return qs.stringify(data)
+    return new Promise<Token>(async (resolve, reject) => {
+      if (this.type === SdkType.App) {
+        new Error('App 环境 getToken 不可执行')
+        return
+      }
+      if (this.type === SdkType.Metaidjs) {
+        const res = await this.axios
+          ?.post<Token>(
+            '/showmoney/oauth2/oauth/token',
+            {
+              code: params.code,
+              grant_type: 'authorization_code',
+              redirect_uri: this.metaidjsOptions.oauthSettings.redirectUri,
+              scope: 'app',
+              client_id: this.appId,
+              client_secret: this.appScrect
+            },
+            {
+              headers: {
+                'Content-Type':
+                  'application/x-www-form-urlencoded;charset=UTF-8'
+              },
+              transformRequest: [
+                function (data: object) {
+                  return qs.stringify(data)
+                }
+              ]
             }
-          ]
+          )
+          .catch((error) => reject(error))
+        if (res?.access_token) {
+          resolve(res)
+        } else {
+          reject(res)
         }
-      )
-    } else {
-      return this.dotwalletjs?.getToken(params)
-    }
+      } else {
+        const res = await this.dotwalletjs
+          ?.getToken(params)
+          .catch((error) => reject(error))
+        if (res && res.accessToken) {
+          resolve({
+            access_token: res.accessToken,
+            refresh_token: res.refreshToken,
+            expires_in: res.expiresIn,
+            token_type: res.tokenType
+          })
+        } else {
+          reject(res)
+        }
+      }
+    })
   }
 
   //  refreshToken

@@ -9,6 +9,7 @@ export enum NFTIssueParamsIconType {
 }
 
 export enum SdkType {
+  Null = -1,
   App = 1,
   Metaidjs = 2,
   Dotwallet = 3
