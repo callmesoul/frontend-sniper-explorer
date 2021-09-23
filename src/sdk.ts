@@ -2,7 +2,8 @@ import MetaIdJs from 'metaidjs'
 // @ts-ignore
 import { v4 as uuid } from 'uuid'
 import { Decimal } from 'decimal.js-light'
-import DotWallet, {
+import {
+  DotWalletForMetaID,
   DotWalletConfig,
   DotWalletToken,
   ENV
@@ -80,7 +81,7 @@ export class SDK {
       functionName: string
     ) => Function
   } = null
-  dotwalletjs: DotWallet | null = null
+  dotwalletjs: any | null = null
   isApp: boolean = false
   appId: string = ''
   appScrect: string = ''
@@ -152,7 +153,7 @@ export class SDK {
         })
       } else if (this.type === SdkType.Dotwallet) {
         if (!this.dotwalletjs)
-          this.dotwalletjs = new DotWallet(this.dotwalletOptions)
+          this.dotwalletjs = new DotWalletForMetaID(this.dotwalletOptions)
         this.initIng = false
         this.isSdkFinish = true
         resolve()
@@ -185,7 +186,7 @@ export class SDK {
       if (this.dotwalletOptions) {
         this.appId = this.dotwalletOptions.clientID
         this.appScrect = this.dotwalletOptions.clientSecret
-        this.dotwalletjs = new DotWallet(this.dotwalletOptions)
+        this.dotwalletjs = new DotWalletForMetaID(this.dotwalletOptions)
       } else {
         new Error('未设置dotwalletOptions')
       }
@@ -421,7 +422,7 @@ export class SDK {
     return new Promise<SendMetaDataTxRes>(async (resolve, reject) => {
       if (!params.payCurrency) params.payCurrency = 'BSV'
       if (typeof params.needConfirm === 'undefined') params.needConfirm = true
-      if (!params.encrypt) params.encrypt = '0'
+      if (!params.encrypt) params.encrypt = 0
       if (!params.dataType) params.dataType = 'application/json'
       if (!params.encoding) params.encoding = 'UTF-8'
       const accessToken = this.getAccessToken()
@@ -464,12 +465,7 @@ export class SDK {
           }
           this.metaidjs?.sendMetaDataTx(_params)
         } else {
-          this.dotwalletjs
-            // @ts-ignore
-            ?.sendMetaDataTx({
-              ..._params,
-              encrypt: parseInt(_params.encrypt!)
-            })
+          this.dotwalletjs?.addProtocolNode(_params)
           /* const res = await this.dotwalletjs
             // @ts-ignore
             ?.sendMetaDataTx({
