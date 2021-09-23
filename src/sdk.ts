@@ -94,6 +94,7 @@ export class SDK {
   getAccessToken: Function // 获取token的方法， 保持最新
   callBackFail?: (error: MetaIdJsRes) => Promise<void> | null = undefined // 统一回调错误处理
   axios: AxiosInstance | null = null
+  isSdkFinish: boolean = false // 是否已初始化完成
   nftAppAddress = '16tp7PhBjvYpHcv53AXkHYHTynmy6xQnxy' // Nft收手续费的地址
 
   constructor(options: {
@@ -142,6 +143,7 @@ export class SDK {
           ...this.metaidjsOptions,
           onLoaded: () => {
             this.initIng = false
+            this.isSdkFinish = true
             resolve()
           },
           onError: (error: MetaIdJsRes) => {
@@ -153,9 +155,11 @@ export class SDK {
         if (!this.dotwalletjs)
           this.dotwalletjs = new DotWallet(this.dotwalletOptions)
         this.initIng = false
+        this.isSdkFinish = true
         resolve()
       } else {
         this.initIng = false
+        this.isSdkFinish = true
         resolve()
       }
     })
@@ -189,16 +193,6 @@ export class SDK {
       this.appScrect = this.appOptions.clientSecret
     }
     window.localStorage.setItem('appType', type.toString())
-  }
-
-  isSdkFinish() {
-    if (this.type === SdkType.App) {
-      return this.appMetaidjs ? true : false
-    } else if (this.type === SdkType.Metaidjs) {
-      return this.metaidjs ? true : false
-    } else if (this.type === SdkType.Dotwallet) {
-      return this.dotwalletjs ? true : false
-    }
   }
 
   // 初始化Api配置
