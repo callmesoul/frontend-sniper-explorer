@@ -353,7 +353,7 @@ export class SDK {
   }
 
   getUserInfo() {
-    return new Promise<MetaIdJsRes>((resolve) => {
+    return new Promise<MetaIdJsRes>(async (resolve) => {
       const params = {
         accessToken: this.getAccessToken(),
         callback: (res: MetaIdJsRes) => {
@@ -381,7 +381,21 @@ export class SDK {
         this.metaidjs?.getUserInfo(params)
       } else {
         // @ts-ignore
-        this.dotwalletjs.getMetaIDUserInfo(params)
+        const res = await this.dotwalletjs.getMetaIDUserInfo({
+          callback: params.callback
+        })
+        if (res) {
+          this.callback(
+            {
+              code: 200,
+              data: {
+                ...res,
+                metaId: res.showId
+              }
+            },
+            resolve
+          )
+        }
       }
     })
   }
