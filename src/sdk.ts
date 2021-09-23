@@ -274,6 +274,9 @@ export class SDK {
           )
           .catch((error) => reject(error))
         if (res?.access_token) {
+          res.expires_time = res.expires_in
+            ? new Date().getTime() + res.expires_in - 2000
+            : -1
           resolve(res)
         } else {
           reject(res)
@@ -287,7 +290,10 @@ export class SDK {
             access_token: res.accessToken,
             refresh_token: res.refreshToken,
             expires_in: res.expiresIn,
-            token_type: res.tokenType
+            token_type: res.tokenType,
+            expires_time: res.expiresIn
+              ? new Date().getTime() + res.expiresIn - 2000
+              : -1
           })
         } else {
           reject(res)
@@ -298,33 +304,58 @@ export class SDK {
 
   //  refreshToken
   refreshToken(params: { refreshToken: string }) {
-    if (this.type === SdkType.App) {
-      new Error('App 环境 getToken 不可执行')
-      return
-    }
-    if (this.type === SdkType.Metaidjs) {
-      return this.axios?.post(
-        '/showmoney/oauth2/oauth/token',
-        {
-          grant_type: 'refresh_token',
-          client_id: this.appId,
-          client_secret: this.appScrect,
-          refresh_token: params.refreshToken
-        },
-        {
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+    return new Promise<Token>(async (resolve, reject) => {
+      if (this.type === SdkType.App) {
+        new Error('App 环境 getToken 不可执行')
+        return
+      }
+      if (this.type === SdkType.Metaidjs) {
+        const res: Token | undefined = await this.axios?.post(
+          '/showmoney/oauth2/oauth/token',
+          {
+            grant_type: 'refresh_token',
+            client_id: this.appId,
+            client_secret: this.appScrect,
+            refresh_token: params.refreshToken
           },
-          transformRequest: [
-            function (data: object) {
-              return qs.stringify(data)
-            }
-          ]
+          {
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+            },
+            transformRequest: [
+              function (data: object) {
+                return qs.stringify(data)
+              }
+            ]
+          }
+        )
+        if (res?.access_token) {
+          res.expires_time = res.expires_in
+            ? new Date().getTime() + res.expires_in - 2000
+            : -1
+          resolve(res)
+        } else {
+          new Error('refreshToken fail')
+          reject('refreshToken fail')
         }
-      )
-    } else {
-      return this.dotwalletjs?.refreshToken(params)
-    }
+      } else {
+        const res = await this.dotwalletjs?.refreshToken(params)
+        if (res && res.accessToken) {
+          resolve({
+            access_token: res.accessToken,
+            refresh_token: res.refreshToken,
+            expires_in: res.expiresIn,
+            token_type: res.tokenType,
+            expires_time: res.expiresIn
+              ? new Date().getTime() + res.expiresIn - 2000
+              : -1
+          })
+        } else {
+          new Error('refreshToken fail')
+          reject(res)
+        }
+      }
+    })
   }
 
   getUserInfo() {
