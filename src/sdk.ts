@@ -414,7 +414,7 @@ export class SDK {
     encoding?: string
     checkOnly?: boolean
   }) {
-    return new Promise<SendMetaDataTxRes>((resolve, reject) => {
+    return new Promise<SendMetaDataTxRes>(async (resolve, reject) => {
       if (!params.payCurrency) params.payCurrency = 'BSV'
       if (typeof params.needConfirm === 'undefined') params.needConfirm = true
       if (!params.encrypt) params.encrypt = '0'
@@ -459,11 +459,22 @@ export class SDK {
           }
           this.metaidjs?.sendMetaDataTx(_params)
         } else {
-          // @ts-ignore
-          this.dotwalletjs?.sendMetaDataTx({
-            ..._params,
-            encrypt: parseInt(_params.encrypt!)
-          })
+          const res = await this.dotwalletjs
+            // @ts-ignore
+            ?.sendMetaDataTx({
+              ..._params,
+              encrypt: parseInt(_params.encrypt!)
+            })
+            .catch((error) => {
+              debugger
+              resolve(error.data)
+            })
+          if (res && res.txId) {
+            resolve({
+              code: 200,
+              data: res
+            })
+          }
         }
       }
     })

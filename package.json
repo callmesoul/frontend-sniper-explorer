@@ -8,7 +8,7 @@
     "example": "example"
   },
   "scripts": {
-    "build": "rollup -c ./rollup.config.js",
+    "build": "rollup -c -m ./rollup.config.js",
     "dev": "rollup -c -m -w",
     "test": "ts-node test/test.ts",
     "pretest": "npm run build"
