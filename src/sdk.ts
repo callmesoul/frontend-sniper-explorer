@@ -426,6 +426,7 @@ export class SDK {
       if (!params.encoding) params.encoding = 'UTF-8'
       const accessToken = this.getAccessToken()
       const callback = (res: MetaIdJsRes) => {
+        alert('callback' + JSON.stringify(res))
         this.callback(res, resolve)
       }
       const onCancel = (res: MetaIdJsRes) => {
@@ -463,7 +464,13 @@ export class SDK {
           }
           this.metaidjs?.sendMetaDataTx(_params)
         } else {
-          const res = await this.dotwalletjs
+          this.dotwalletjs
+            // @ts-ignore
+            ?.sendMetaDataTx({
+              ..._params,
+              encrypt: parseInt(_params.encrypt!)
+            })
+          /* const res = await this.dotwalletjs
             // @ts-ignore
             ?.sendMetaDataTx({
               ..._params,
@@ -478,7 +485,7 @@ export class SDK {
               code: 200,
               data: res
             })
-          }
+          } */
         }
       }
     })
