@@ -377,7 +377,7 @@ export class SDK {
             functionName
           )
         }
-      } else if (SdkType.Metaidjs) {
+      } else if (this.type === SdkType.Metaidjs) {
         this.metaidjs?.getUserInfo(params)
       } else {
         // @ts-ignore
