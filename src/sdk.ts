@@ -98,7 +98,6 @@ export class SDK {
   nftAppAddress = '16tp7PhBjvYpHcv53AXkHYHTynmy6xQnxy' // Nft收手续费的地址
 
   constructor(options: {
-    type: SdkType
     metaIdTag: string
     showmoneyApi: string
     getAccessToken: Function
@@ -168,6 +167,11 @@ export class SDK {
   toWallet() {
     let url = ''
     if (this.type === SdkType.Dotwallet) {
+      if (this.dotwalletOptions.env === 'production') {
+        url = 'https://www.ddpurse.com'
+      } else {
+        url = 'https://prerelease.ddpurse.com'
+      }
     } else {
       url = this.metaidjsOptions.baseUri
     }
@@ -188,9 +192,9 @@ export class SDK {
     } else if (type === SdkType.App) {
       this.appId = this.appOptions.clientId
       this.appScrect = this.appOptions.clientSecret
-    } else {
-      this.appId = this.appOptions.clientId
-      this.appScrect = this.appOptions.clientSecret
+    } else if (type === SdkType.Metaidjs) {
+      this.appId = this.metaidjsOptions.oauthSettings.clientId
+      this.appScrect = this.metaidjsOptions.oauthSettings.clientSecret!
     }
     window.localStorage.setItem('appType', type.toString())
   }
