@@ -411,6 +411,7 @@ export class SDK {
     needConfirm?: boolean
     encrypt?: string
     dataType?: string
+    encoding?: string
     checkOnly?: boolean
   }) {
     return new Promise<SendMetaDataTxRes>((resolve, reject) => {
@@ -418,6 +419,7 @@ export class SDK {
       if (typeof params.needConfirm === 'undefined') params.needConfirm = true
       if (!params.encrypt) params.encrypt = '0'
       if (!params.dataType) params.dataType = 'application/json'
+      if (!params.encoding) params.encoding = 'UTF-8'
       const accessToken = this.getAccessToken()
       const callback = (res: MetaIdJsRes) => {
         this.callback(res, resolve)
@@ -425,7 +427,7 @@ export class SDK {
       const onCancel = (res: MetaIdJsRes) => {
         reject(res)
       }
-      if (this.isApp) {
+      if (this.type === SdkType.App) {
         const functionName: string = `sendMetaDataTxCallBack`
         // @ts-ignore
         window[functionName] = callback
@@ -450,12 +452,19 @@ export class SDK {
           accessToken,
           ...params
         }
-
-        // 处理余额不足回调
-        ;(window as any).handleNotEnoughMoney = (res: MetaIdJsRes) => {
-          reject()
+        if (this.type === SdkType.Metaidjs) {
+          // 处理余额不足回调
+          ;(window as any).handleNotEnoughMoney = (res: MetaIdJsRes) => {
+            reject()
+          }
+          this.metaidjs?.sendMetaDataTx(_params)
+        } else {
+          // @ts-ignore
+          this.dotwalletjs?.sendMetaDataTx({
+            ..._params,
+            encrypt: parseInt(_params.encrypt!)
+          })
         }
-        this.metaidjs?.sendMetaDataTx(_params)
       }
     })
   }
