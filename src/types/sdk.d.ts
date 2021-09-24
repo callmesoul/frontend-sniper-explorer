@@ -5,6 +5,13 @@ export interface SdkMetaidJsOptionsTypes {
   baseUri: string
   oauthSettings: SdkMetaidJsOauthSettingsTypes
 }
+
+export interface DotWalletConfig {
+  clientID: string
+  clientSecret: string
+  redirectUrl: string
+  env: ENV
+}
 export interface SdkMetaidJsOauthSettingsTypes {
   clientId: string
   redirectUri: string

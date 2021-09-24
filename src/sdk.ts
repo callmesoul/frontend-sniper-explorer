@@ -2,12 +2,7 @@ import MetaIdJs from 'metaidjs'
 // @ts-ignore
 import { v4 as uuid } from 'uuid'
 import { Decimal } from 'decimal.js-light'
-import {
-  DotWalletForMetaID,
-  DotWalletConfig,
-  DotWalletToken,
-  ENV
-} from 'dotwallet-jssdk'
+import { DotWalletForMetaID, DotWalletToken, ENV } from 'dotwallet-jssdk'
 import qs from 'qs'
 import axios, { AxiosInstance } from 'axios'
 import {
@@ -33,7 +28,8 @@ import {
   SdkMetaidJsOptionsTypes,
   SellNFTParams,
   SendMetaDataTxRes,
-  Token
+  Token,
+  DotWalletConfig
 } from './types/sdk'
 import { Lang, SdkType } from './emums'
 
@@ -185,7 +181,7 @@ export class SDK {
     if (type === SdkType.Dotwallet) {
       if (this.dotwalletOptions) {
         this.appId = this.dotwalletOptions.clientID
-        this.appScrect = this.dotwalletOptions.clientSecret
+        this.appScrect = this.dotwalletOptions.clientSecret!
         this.dotwalletjs = new DotWalletForMetaID(this.dotwalletOptions)
       } else {
         new Error('未设置dotwalletOptions')
@@ -283,7 +279,7 @@ export class SDK {
       } else {
         const res = await this.dotwalletjs
           ?.getToken(params)
-          .catch((error) => reject(error))
+          .catch((error: any) => reject(error))
         if (res && res.accessToken) {
           resolve({
             access_token: res.accessToken,
@@ -386,21 +382,16 @@ export class SDK {
         this.metaidjs?.getUserInfo(params)
       } else {
         // @ts-ignore
-        const res = await this.dotwalletjs.getMetaIDUserInfo({
-          callback: params.callback
-        })
-        if (res) {
-          this.callback(
-            {
-              code: 200,
-              data: {
-                ...res,
-                metaId: res.showId
+        this.dotwalletjs.getMetaIDUserInfo({
+          callback: (res: any) => {
+            if (res) {
+              if (res.code === 200) {
+                res.data.metaId = res.data.showId
               }
-            },
-            resolve
-          )
-        }
+              this.callback(res, resolve)
+            }
+          }
+        })
       }
     })
   }
@@ -422,12 +413,11 @@ export class SDK {
     return new Promise<SendMetaDataTxRes>(async (resolve, reject) => {
       if (!params.payCurrency) params.payCurrency = 'BSV'
       if (typeof params.needConfirm === 'undefined') params.needConfirm = true
-      if (!params.encrypt) params.encrypt = 0
+      if (!params.encrypt) params.encrypt = '0'
       if (!params.dataType) params.dataType = 'application/json'
       if (!params.encoding) params.encoding = 'UTF-8'
       const accessToken = this.getAccessToken()
       const callback = (res: MetaIdJsRes) => {
-        alert('callback' + JSON.stringify(res))
         this.callback(res, resolve)
       }
       const onCancel = (res: MetaIdJsRes) => {
@@ -465,23 +455,10 @@ export class SDK {
           }
           this.metaidjs?.sendMetaDataTx(_params)
         } else {
-          this.dotwalletjs?.addProtocolNode(_params)
-          /* const res = await this.dotwalletjs
-            // @ts-ignore
-            ?.sendMetaDataTx({
-              ..._params,
-              encrypt: parseInt(_params.encrypt!)
-            })
-            .catch((error) => {
-              debugger
-              resolve(error.data)
-            })
-          if (res && res.txId) {
-            resolve({
-              code: 200,
-              data: res
-            })
-          } */
+          this.dotwalletjs?.sendMetaDataTx({
+            ..._params,
+            encrypt: parseInt(_params.encrypt!)
+          })
         }
       }
     })
