@@ -2,15 +2,12 @@ import MetaIdJs from 'metaidjs'
 // @ts-ignore
 import { v4 as uuid } from 'uuid'
 import { Decimal } from 'decimal.js-light'
-import { DotWalletForMetaID, DotWalletToken, ENV } from 'dotwallet-jssdk'
+import { DotWalletForMetaID } from 'dotwallet-jssdk'
 import qs from 'qs'
 import axios, { AxiosInstance } from 'axios'
 import {
-  BuyNFTParams,
-  CancelSellNFTParams,
   CreateMetaFileFunParams,
   CreateNFTParams,
-  CreateNftSellProtocolParams,
   GetBalanceRes,
   IssueNFTResData,
   MetaFile,
@@ -19,14 +16,12 @@ import {
   NftBuyResData,
   NftCancelParams,
   NFTCancelResData,
-  NftDataProtocolParams,
   NFTGenesisParams,
   NFTIssueParams,
   NftSellParams,
   NftSellResData,
   SdkGenesisNFTRes,
   SdkMetaidJsOptionsTypes,
-  SellNFTParams,
   SendMetaDataTxRes,
   Token,
   DotWalletConfig
