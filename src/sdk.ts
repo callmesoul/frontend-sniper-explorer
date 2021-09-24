@@ -1066,7 +1066,7 @@ export class SDK {
 }
 
 //hex格式转为Base64
-export function hexToBase64(hex: string) {
+export function hexToase64(hex: string) {
   var pos = 0
   var len = hex.length
   if (len % 2 != 0) {
