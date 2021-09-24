@@ -1088,3 +1088,7 @@ export function hexToase64(hex: string) {
   }
   return 'data:image/png;base64,' + window.btoa(binary)
 }
+
+export function toTxLink(txId: string) {
+  window.open(`https://whatsonchain.com/tx/${txId}`)
+}
