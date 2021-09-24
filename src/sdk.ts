@@ -1064,3 +1064,27 @@ export class SDK {
     })
   }
 }
+
+//hex格式转为Base64
+export function hexToBase64(hex: string) {
+  var pos = 0
+  var len = hex.length
+  if (len % 2 != 0) {
+    return null
+  }
+  len /= 2
+  var hexA = new Array()
+  for (var i = 0; i < len; i++) {
+    var s = hex.substr(pos, 2)
+    var v = parseInt(s, 16)
+    hexA.push(v)
+    pos += 2
+  }
+  var binary = ''
+  var bytes = new Uint8Array(hexA)
+  var len = bytes.byteLength
+  for (var i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i])
+  }
+  return 'data:image/png;base64,' + window.btoa(binary)
+}
