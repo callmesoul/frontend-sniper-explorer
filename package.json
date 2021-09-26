@@ -37,6 +37,7 @@
   },
   "dependencies": {
     "axios": "^0.21.1",
+    "buffer": "^6.0.3",
     "decimal.js-light": "^2.5.1",
     "dotwallet-jssdk": "^1.2.7",
     "metaidjs": "^1.7.0",

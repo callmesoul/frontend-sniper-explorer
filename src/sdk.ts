@@ -27,6 +27,7 @@ import {
   DotWalletConfig
 } from './types/sdk'
 import { Encrypt, Lang, SdkType } from './emums'
+import { Buffer } from 'buffer'
 
 export class SDK {
   metaidjs: null | MetaIdJs = null
