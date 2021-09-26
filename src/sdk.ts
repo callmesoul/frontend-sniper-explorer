@@ -26,7 +26,7 @@ import {
   Token,
   DotWalletConfig
 } from './types/sdk'
-import { Lang, SdkType } from './emums'
+import { Encrypt, Lang, SdkType } from './emums'
 
 export class SDK {
   metaidjs: null | MetaIdJs = null
@@ -126,6 +126,28 @@ export class SDK {
     this.initAxiosConfig()
   }
 
+  // 更改 sdk 环境类型
+  changeSdkType(type: SdkType) {
+    this.type = type
+    if (type === SdkType.Dotwallet) {
+      if (this.dotwalletOptions) {
+        this.appId = this.dotwalletOptions.clientID
+        this.appScrect = this.dotwalletOptions.clientSecret!
+        this.dotwalletjs = new DotWalletForMetaID(this.dotwalletOptions)
+      } else {
+        new Error('未设置dotwalletOptions')
+      }
+    } else if (type === SdkType.App) {
+      this.appId = this.appOptions.clientId
+      this.appScrect = this.appOptions.clientSecret
+    } else if (type === SdkType.Metaidjs) {
+      this.appId = this.metaidjsOptions.oauthSettings.clientId
+      this.appScrect = this.metaidjsOptions.oauthSettings.clientSecret!
+    }
+    window.localStorage.setItem('appType', type.toString())
+  }
+
+  // 初始化 sdk
   initSdk() {
     return new Promise<void>((resolve, reject) => {
       this.initIng = true
@@ -156,6 +178,7 @@ export class SDK {
     })
   }
 
+  // 跳转钱包
   toWallet() {
     let url = ''
     if (this.type === SdkType.Dotwallet) {
@@ -168,27 +191,6 @@ export class SDK {
       url = this.metaidjsOptions.baseUri
     }
     window.open(url)
-  }
-
-  // 更改 sdk 环境类型
-  changeSdkType(type: SdkType) {
-    this.type = type
-    if (type === SdkType.Dotwallet) {
-      if (this.dotwalletOptions) {
-        this.appId = this.dotwalletOptions.clientID
-        this.appScrect = this.dotwalletOptions.clientSecret!
-        this.dotwalletjs = new DotWalletForMetaID(this.dotwalletOptions)
-      } else {
-        new Error('未设置dotwalletOptions')
-      }
-    } else if (type === SdkType.App) {
-      this.appId = this.appOptions.clientId
-      this.appScrect = this.appOptions.clientSecret
-    } else if (type === SdkType.Metaidjs) {
-      this.appId = this.metaidjsOptions.oauthSettings.clientId
-      this.appScrect = this.metaidjsOptions.oauthSettings.clientSecret!
-    }
-    window.localStorage.setItem('appType', type.toString())
   }
 
   // 初始化Api配置
@@ -212,8 +214,12 @@ export class SDK {
     )
   }
 
-  // 跳转授权
+  // 跳转登陆授权
   login() {
+    if (this.type === SdkType.Null) {
+      new Error('你还没设置sdk环境')
+      return
+    }
     if (this.type === SdkType.App) {
       new Error('App环境下没有login函数')
       return
@@ -400,7 +406,7 @@ export class SDK {
     payCurrency?: string
     payTo?: []
     needConfirm?: boolean
-    encrypt?: string
+    encrypt?: Encrypt
     dataType?: string
     encoding?: string
     checkOnly?: boolean
@@ -408,7 +414,7 @@ export class SDK {
     return new Promise<SendMetaDataTxRes>(async (resolve, reject) => {
       if (!params.payCurrency) params.payCurrency = 'BSV'
       if (typeof params.needConfirm === 'undefined') params.needConfirm = true
-      if (!params.encrypt) params.encrypt = '0'
+      if (!params.encrypt) params.encrypt = Encrypt.No
       if (!params.dataType) params.dataType = 'application/json'
       if (!params.encoding) params.encoding = 'UTF-8'
       const accessToken = this.getAccessToken()
@@ -547,95 +553,7 @@ export class SDK {
     resolve(res)
   }
 
-  // 处理附件
-  setAttachments(_data: any, fileAttrs: { name: string; encrypt: string }[]) {
-    return new Promise<{ data: any; attachments: any }>((resolve) => {
-      const attachments: {
-        fileName: string
-        fileType: string
-        data: string
-        encrypt: string
-      }[] = []
-      const data = { ..._data }
-      fileAttrs.map((item, index) => {
-        for (let i in data) {
-          if (i === item.name) {
-            if (typeof data[i] !== 'string') {
-              attachments.push({
-                fileName: data[i].name,
-                fileType: data[i].data_type,
-                data: data[i].hexData,
-                encrypt: item.encrypt
-              })
-              data[i] = `![metafile](${index})`
-            }
-          }
-        }
-      })
-      resolve({ data, attachments })
-    })
-  }
-
-  // 文件转为MetaFile 格式，便于后续处理附件
-  fileToMetaFile(file: File) {
-    return new Promise<MetaFile>((resolve, reject) => {
-      const fileType = file.type
-      const reader = new FileReader()
-      let fileBinary: string
-      reader.onload = () => {
-        const arrayBuffer = reader.result
-        let buffer: string = ''
-        let hex: string = ''
-        if (arrayBuffer) {
-          // @ts-ignore
-          buffer = Buffer.from(arrayBuffer)
-          // @ts-ignore
-          hex = buffer.toString('hex')
-          fileBinary = buffer
-        }
-        const fileData = 'data:' + fileType + ';base64,' + this.hexToBase64(hex)
-        const imgData: MetaFile = {
-          base64Data: fileData,
-          BufferData: fileBinary,
-          hexData: hex,
-          name: file.name,
-          raw: file,
-          data_type: fileType
-        }
-        /*
-            fileBinary二进制流
-            fileData 图片base64编码
-            fileType 文件名
-            */
-        resolve(imgData)
-      }
-      reader.onerror = (error) => {
-        new Error(`handleFileChange error /n ${error}`)
-        reject(reject)
-      }
-      reader.readAsArrayBuffer(file)
-    })
-  }
-
-  // 十六进制 转换为 图片
-  hexToBase64(str: string) {
-    if (!str) {
-      return 'https://showjob.oss-cn-hangzhou.aliyuncs.com/index/img_photo_default.png'
-    }
-    var a = []
-    for (let i = 0, len = str.length; i < len; i += 2) {
-      a.push(parseInt(str.substr(i, 2), 16))
-    }
-    var binary = ''
-    var bytes = new Uint8Array(a)
-    var len = bytes.byteLength
-    for (var i = 0; i < len; i++) {
-      binary += String.fromCharCode(bytes[i])
-    }
-    const sty = window.btoa(binary)
-    return sty
-  }
-
+  // 文件上链
   createMetaFileProtocol(params: CreateMetaFileFunParams) {
     const { name, ...data } = params.data
     const nameArry = name.split('.')
@@ -647,7 +565,7 @@ export class SDK {
       }
     })
     return this.sendMetaDataTx({
-      nodeName: 'NftIssue-6d3eaf759bbc',
+      nodeName: 'MetaFile',
       brfcId: '6d3eaf759bbc',
       path: '/Protocols/MetaFile',
       payCurrency: 'bsv',
@@ -666,7 +584,7 @@ export class SDK {
   // NFT
 
   // 检查NFT操作txid状态，成功后才可继续其他上链操作，否则容易双花
-  checkNftTxIdStatus(
+  getSensibleTxData(
     txId: string,
     timer?: number,
     parentResolve?: (value: void | PromiseLike<void>) => void,
@@ -689,7 +607,7 @@ export class SDK {
               else reject()
             } else {
               setTimeout(() => {
-                this.checkNftTxIdStatus(
+                this.getSensibleTxData(
                   txId,
                   timer ? timer + 1 : 1,
                   parentResolve ? parentResolve : resolve,
@@ -729,7 +647,7 @@ export class SDK {
       let amount = 0
       const issueOperate = async () => {
         if (!params.checkOnly) {
-          await this.checkNftTxIdStatus(genesisTxId!).catch(() =>
+          await this.getSensibleTxData(genesisTxId!).catch(() =>
             reject('createNFT error')
           )
         }
@@ -1058,10 +976,72 @@ export class SDK {
       }
     })
   }
+
+  // 获取用户MC余额
+  getMc(address: string) {
+    return new Promise<number>((resolve, reject) => {
+      fetch(`https://api.sensiblequery.com/ft/summary/${address}`)
+        .then(function (response) {
+          return response.json()
+        })
+        .then((response: GetMcRes) => {
+          if (response.code === 0) {
+            if (response.data) {
+              const mc = response.data.find((item) => {
+                return (
+                  item.sensibleId ===
+                    '3e04f81d7fa7d4d606c3c4c8e8d3a8dcf58b5808740d40a445f3884e126bc7fd00000000' &&
+                  item.codehash ===
+                    '777e4dd291059c9f7a0fd563f7204576dcceb791' &&
+                  item.genesis === '54256eb1b9c815a37c4af1b82791ec6bdf5b3fa3'
+                )
+              })
+              if (mc) {
+                resolve(
+                  new Decimal(mc.balance + mc.pendingBalance)
+                    .div(Math.pow(10, mc.decimal))
+                    .toNumber()
+                )
+              } else {
+                resolve(0)
+              }
+            } else {
+              resolve(0)
+            }
+          } else {
+            reject('getMc')
+          }
+        })
+        .catch(() => {
+          reject('getMc')
+        })
+    })
+  }
+
+  // showman queryFindMetaData
+  queryFindMetaData = (params: string) => {
+    return this.axios?.get(
+      `/v2showMANDB/api/v1/query/queryFindMetaData/${btoa(
+        JSON.stringify(params)
+      )}`
+    )
+  }
+
+  // showman queryFindMetaDataForPost
+  queryFindMetaDataForPost = (params: any) => {
+    return this.axios?.post(
+      `/v2showMANDB/api/v1/query/queryFindMetaDataForPost`,
+      {
+        data: {
+          query: btoa(JSON.stringify(params))
+        }
+      }
+    )
+  }
 }
 
 //hex格式转为Base64
-export function hexToase64(hex: string) {
+export function hexToBase64(hex: string, fileType = 'image/png') {
   var pos = 0
   var len = hex.length
   if (len % 2 != 0) {
@@ -1081,9 +1061,85 @@ export function hexToase64(hex: string) {
   for (var i = 0; i < len; i++) {
     binary += String.fromCharCode(bytes[i])
   }
-  return 'data:image/png;base64,' + window.btoa(binary)
+  return `data:${fileType};base64,` + window.btoa(binary)
 }
 
 export function toTxLink(txId: string) {
   window.open(`https://whatsonchain.com/tx/${txId}`)
+}
+
+// 文件转为MetaFile 格式，便于后续处理附件
+export function fileToMetaFile(file: File) {
+  return new Promise<MetaFile>((resolve, reject) => {
+    const fileType = file.type
+    const reader = new FileReader()
+    let fileBinary: string
+    reader.onload = () => {
+      const arrayBuffer = reader.result
+      let buffer: string = ''
+      let hex: string = ''
+      if (arrayBuffer) {
+        // @ts-ignore
+        buffer = Buffer.from(arrayBuffer)
+        // @ts-ignore
+        hex = buffer.toString('hex')
+        fileBinary = buffer
+      }
+      const fileData = 'data:' + fileType + ';base64,' + hexToBase64(hex)
+      const imgData: MetaFile = {
+        base64Data: fileData,
+        BufferData: fileBinary,
+        hexData: hex,
+        name: file.name,
+        raw: file,
+        data_type: fileType
+      }
+      /*
+          fileBinary二进制流
+          fileData 图片base64编码
+          fileType 文件名
+          */
+      resolve(imgData)
+    }
+    reader.onerror = (error) => {
+      new Error(`handleFileChange error /n ${error}`)
+      reject(reject)
+    }
+    reader.readAsArrayBuffer(file)
+  })
+}
+
+// 处理附件
+// 第一个参数为`data`, `data`里面的文件必须为`MetaFile` 格式，
+// 第二个字段为要处理的字段和是否加密`{ name: string; encrypt: string }[]`
+// 最终返回处理过的`data`和`attachments`供`sendMetaDataTx`使用
+export function setAttachments(
+  _data: any,
+  fileAttrs: { name: string; encrypt: Encrypt }[]
+) {
+  return new Promise<{ data: any; attachments: any }>((resolve) => {
+    const attachments: {
+      fileName: string
+      fileType: string
+      data: string
+      encrypt: Encrypt
+    }[] = []
+    const data = { ..._data }
+    fileAttrs.map((item, index) => {
+      for (let i in data) {
+        if (i === item.name) {
+          if (typeof data[i] !== 'string') {
+            attachments.push({
+              fileName: data[i].name,
+              fileType: data[i].data_type,
+              data: data[i].hexData,
+              encrypt: item.encrypt
+            })
+            data[i] = `![metafile](${index})`
+          }
+        }
+      }
+    })
+    resolve({ data, attachments })
+  })
 }

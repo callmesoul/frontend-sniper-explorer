@@ -14,3 +14,8 @@ export enum SdkType {
   Metaidjs = 2,
   Dotwallet = 3
 }
+
+export enum Encrypt {
+  Yes = '1',
+  No = '0'
+}
