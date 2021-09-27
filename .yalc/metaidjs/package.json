@@ -1,0 +1,24 @@
+{
+  "name": "metaidjs",
+  "version": "1.8.1",
+  "description": "",
+  "keywords": [],
+  "main": "dist/metaidjs.cjs.js",
+  "module": "dist/metaidjs.esm.js",
+  "browser": "dist/metaidjs.udm.js",
+  "typings": "dist/types/metaidjs.d.ts",
+  "files": [
+    "dist"
+  ],
+  "author": "Hosanna <ohosanna@gmail.com>",
+  "license": "MIT",
+  "engines": {
+    "node": ">=6.0.0"
+  },
+  "scripts": {
+    "start": "rollup -c rollup.config.ts -w",
+    "build": "tsc --module commonjs && rollup -c rollup.config.ts"
+  },
+  "dependencies": {},
+  "yalcSig": "7372409d02b3ddfbcbbdd12a44c41c93"
+}
