@@ -1830,10 +1830,10 @@ md5.js@^1.3.4:
     inherits "^2.0.1"
     safe-buffer "^5.1.2"
 
-metaidjs@^1.7.0:
-  version "1.7.0"
-  resolved "https://registry.nlark.com/metaidjs/download/metaidjs-1.7.0.tgz#7bbedbf93ac0ddf3c8df9cc941e71430a47d8f8f"
-  integrity sha1-e77b+TrA3fPI35zJQecUMKR9j48=
+metaidjs@1.8.0:
+  version "1.8.0"
+  resolved "https://registry.npmmirror.com/metaidjs/download/metaidjs-1.8.0.tgz?cache=0&sync_timestamp=1632707725189&other_urls=https%3A%2F%2Fregistry.npmmirror.com%2Fmetaidjs%2Fdownload%2Fmetaidjs-1.8.0.tgz#5f051dcb42b5ee80eb91c20d8485d2b9fa7dcd3f"
+  integrity sha1-XwUdy0K17oDrkcINhIXSufp9zT8=
 
 miller-rabin@^4.0.0:
   version "4.0.1"
