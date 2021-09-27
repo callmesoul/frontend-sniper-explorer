@@ -40,7 +40,7 @@
     "buffer": "^6.0.3",
     "decimal.js-light": "^2.5.1",
     "dotwallet-jssdk": "^1.2.7",
-    "metaidjs": "1.8.0",
+    "metaidjs": "1.8.1",
     "qs": "^6.10.1",
     "uuid": "^8.3.2"
   }
