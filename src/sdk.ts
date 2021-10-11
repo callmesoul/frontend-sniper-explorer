@@ -24,12 +24,14 @@ import {
   SdkMetaidJsOptionsTypes,
   SendMetaDataTxRes,
   Token,
-  DotWalletConfig
+  DotWalletConfig,
+  GetMcRes
 } from './types/sdk'
 import { Encrypt, Lang, SdkType } from './emums'
 import { Buffer } from 'buffer'
 
 export class SDK {
+  // @ts-ignore
   metaidjs: null | MetaIdJs = null
   appMetaidjs: null | {
     sendMetaDataTx: (
@@ -153,6 +155,7 @@ export class SDK {
     return new Promise<void>((resolve, reject) => {
       this.initIng = true
       if (this.type === SdkType.Metaidjs) {
+        // @ts-ignore
         this.metaidjs = new MetaIdJs({
           ...this.metaidjsOptions,
           onLoaded: () => {
@@ -1086,9 +1089,9 @@ export function fileToMetaFile(file: File) {
         hex = buffer.toString('hex')
         fileBinary = buffer
       }
-      const fileData = 'data:' + fileType + ';base64,' + hexToBase64(hex)
+      const fileData = hexToBase64(hex, fileType)
       const imgData: MetaFile = {
-        base64Data: fileData,
+        base64Data: fileData!,
         BufferData: fileBinary,
         hexData: hex,
         name: file.name,
