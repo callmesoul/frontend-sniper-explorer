@@ -310,25 +310,28 @@ export class SDK {
         return
       }
       if (this.type === SdkType.Metaidjs) {
-        const res: Token | undefined = await this.axios?.post(
-          '/showmoney/oauth2/oauth/token',
-          {
-            grant_type: 'refresh_token',
-            client_id: this.appId,
-            client_secret: this.appScrect,
-            refresh_token: params.refreshToken
-          },
-          {
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+        const res: Token | undefined = await this.axios
+          ?.post(
+            '/showmoney/oauth2/oauth/token',
+            {
+              grant_type: 'refresh_token',
+              client_id: this.appId,
+              client_secret: this.appScrect,
+              refresh_token: params.refreshToken
             },
-            transformRequest: [
-              function (data: object) {
-                return qs.stringify(data)
-              }
-            ]
-          }
-        )
+            {
+              headers: {
+                'Content-Type':
+                  'application/x-www-form-urlencoded;charset=UTF-8'
+              },
+              transformRequest: [
+                function (data: object) {
+                  return qs.stringify(data)
+                }
+              ]
+            }
+          )
+          .catch((error) => reject(error))
         if (res?.access_token) {
           res.expires_time = res.expires_in
             ? new Date().getTime() + res.expires_in - 2000
