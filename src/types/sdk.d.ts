@@ -6,12 +6,20 @@ export interface SdkMetaidJsOptionsTypes {
   oauthSettings: SdkMetaidJsOauthSettingsTypes
 }
 
+export interface ShowManRes {
+  code: number
+  result: {
+    data: any[]
+  }
+}
+
 export interface DotWalletConfig {
   clientID: string
   clientSecret: string
   redirectUrl: string
   env: ENV
 }
+
 export interface SdkMetaidJsOauthSettingsTypes {
   clientId: string
   redirectUri: string
@@ -343,4 +351,23 @@ export interface MetaFile {
   data_type: string
   raw: null | File
   metaFileTxId?: string
+}
+
+export interface CreateMetaAccessContentProrocolParams {
+  createTime: number
+  updateTime: number
+  metaAccessService: string
+  metaAccessServiceConfigMetanetID: string
+  serverCode: string
+  serverPublicKey: string
+  publicContent: string
+  encryptContent: string
+  title: string
+  cover: MetaFile
+  artMark: string
+}
+
+export interface CreateMetaAccessProrocolParams
+  extends CreateMetaAccessContentProrocolParams {
+  amount: number
 }

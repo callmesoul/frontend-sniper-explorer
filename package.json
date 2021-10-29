@@ -1,6 +1,6 @@
 {
   "name": "sdk",
-  "version": "0.0.14",
+  "version": "0.0.24",
   "description": "metaidjs sdk",
   "main": "dist/sdk.min.js",
   "typings": "src/index.d.ts",

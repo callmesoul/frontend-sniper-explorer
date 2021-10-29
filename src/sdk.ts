@@ -25,7 +25,10 @@ import {
   SendMetaDataTxRes,
   Token,
   DotWalletConfig,
-  GetMcRes
+  GetMcRes,
+  CreateMetaAccessProrocolParams,
+  CreateMetaAccessContentProrocolParams,
+  ShowManRes
 } from './types/sdk'
 import { Encrypt, Lang, SdkType } from './emums'
 import { Buffer } from 'buffer'
@@ -363,16 +366,22 @@ export class SDK {
 
   getUserInfo() {
     return new Promise<MetaIdJsRes>(async (resolve) => {
+      const callback = (res: MetaIdJsRes) => {
+        if (res) {
+          if (res.code === 200 && !res.data.metaId) {
+            res.data.metaId = res.data.showId
+          }
+        }
+        this.callback(res, resolve)
+      }
       const params = {
         accessToken: this.getAccessToken(),
-        callback: (res: MetaIdJsRes) => {
-          this.callback(res, resolve)
-        }
+        callback
       }
       if (this.type === SdkType.App) {
         const functionName: string = `getUserInfoCallBack`
         // @ts-ignore
-        window[functionName] = params.callback
+        window[functionName] = callback
         if ((window as any).appMetaIdJsV2) {
           ;(window as any).appMetaIdJsV2?.getUserInfo(
             this.appId,
@@ -391,14 +400,7 @@ export class SDK {
       } else {
         // @ts-ignore
         this.dotwalletjs.getMetaIDUserInfo({
-          callback: (res: any) => {
-            if (res) {
-              if (res.code === 200) {
-                res.data.metaId = res.data.showId
-              }
-              this.callback(res, resolve)
-            }
-          }
+          callback
         })
       }
     })
@@ -411,12 +413,17 @@ export class SDK {
     attachments?: string[]
     path: string
     payCurrency?: string
-    payTo?: []
+    payTo?: { amount: number; address: string }[]
     needConfirm?: boolean
     encrypt?: Encrypt
     dataType?: string
     encoding?: string
     checkOnly?: boolean
+    // 单独加密data里面字段内容
+    ecdh?: {
+      publickey: string // 加密用的 publickey
+      type: string // data 里面要加密的字段
+    }
   }) {
     return new Promise<SendMetaDataTxRes>(async (resolve, reject) => {
       if (!params.payCurrency) params.payCurrency = 'BSV'
@@ -472,19 +479,66 @@ export class SDK {
     })
   }
 
-  eciesDecryptData(data: string) {
-    return new Promise((resolve) => {
+  ecdhDecryptData(data: {
+    msg: string
+    publicKey: string
+    metaDataPublicKey?: string
+    path?: string
+  }) {
+    return new Promise<MetaIdJsRes>((resolve) => {
+      const callback = (res: MetaIdJsRes) => {
+        this.callback(res, resolve)
+      }
       const _params = {
-        callback: (res: MetaIdJsRes) => {
-          this.callback(res, resolve)
-        },
+        callback,
+        accessToken: this.getAccessToken(),
+        data: JSON.stringify(data)
+      }
+      if (this.type === SdkType.App) {
+        const functionName: string = `ecdhDecryptDataCallBack`
+        // @ts-ignore
+        window[functionName] = callback
+        if ((window as any).appMetaIdJsV2) {
+          ;(window as any).appMetaIdJsV2?.ecdhDecryptData(
+            _params.accessToken,
+            data.msg,
+            data.publicKey,
+            data.metaDataPublicKey,
+            functionName
+          )
+        } else {
+          ;(window as any).appMetaIdJs?.ecdhDecryptData(
+            _params.accessToken,
+            data.msg,
+            data.publicKey,
+            data.metaDataPublicKey,
+            functionName
+          )
+        }
+      } else if (this.type === SdkType.Metaidjs) {
+        this.metaidjs?.ecdhDecryptData(_params)
+      } else {
+        // 待兼容
+        // @ts-ignore
+        this.dotwalletjs.ecdhDecryptData(_params)
+      }
+    })
+  }
+
+  eciesDecryptData(data: string) {
+    return new Promise<MetaIdJsRes>((resolve) => {
+      const callback = (res: MetaIdJsRes) => {
+        this.callback(res, resolve)
+      }
+      const _params = {
+        callback,
         accessToken: this.getAccessToken(),
         data
       }
       if (this.type === SdkType.App) {
         const functionName: string = `eciesDecryptDataCallBack`
         // @ts-ignore
-        window[functionName] = _params.callback
+        window[functionName] = callback
         if ((window as any).appMetaIdJsV2) {
           ;(window as any).appMetaIdJsV2?.decryptData(
             _params.accessToken,
@@ -503,7 +557,7 @@ export class SDK {
       } else {
         // 待兼容
         // @ts-ignore
-        this.dotwalletjs.ecdhDecryptData(_params)
+        this.dotwalletjs.eciesDecryptData(_params)
       }
     })
   }
@@ -725,6 +779,9 @@ export class SDK {
 
   genesisNFT(params: NFTGenesisParams): Promise<SdkGenesisNFTRes> {
     return new Promise<SdkGenesisNFTRes>((resolve, reject) => {
+      const callback = (res: SdkGenesisNFTRes) => {
+        this.callback(res, resolve)
+      }
       const _params = {
         data: {
           nftTotal: params.nftTotal,
@@ -761,14 +818,11 @@ export class SDK {
           checkOnly: params.checkOnly,
           seriesName: params.seriesName
         },
-        callback: (res: SdkGenesisNFTRes) => {
-          debugger
-          this.callback(res, resolve)
-        }
+        callback
       }
       if (this.isApp) {
         const functionName: string = `genesisNFTCallBack`
-        ;(window as any)[functionName] = _params.callback
+        ;(window as any)[functionName] = callback
         const accessToken = this.getAccessToken()
         if ((window as any).appMetaIdJsV2) {
           ;(window as any).appMetaIdJsV2.genesisNFT(
@@ -819,18 +873,19 @@ export class SDK {
   // nft 铸造
   issueNFT(params: NFTIssueParams) {
     return new Promise<IssueNFTResData>((resolve, reject) => {
+      const callback = (res: MetaIdJsRes) => {
+        this.callback(res, resolve)
+      }
       const _params = {
         data: {
           payTo: [{ address: this.nftAppAddress, amount: 10000 }],
           ...params
         },
-        callback: (res: MetaIdJsRes) => {
-          this.callback(res, resolve)
-        }
+        callback
       }
       if (this.isApp) {
         const functionName: string = `issueNFTCallBack`
-        ;(window as any)[functionName] = _params.callback
+        ;(window as any)[functionName] = callback
         const accessToken = this.getAccessToken()
         if ((window as any).appMetaIdJsV2) {
           ;(window as any).appMetaIdJsV2.issueNFT(
@@ -856,6 +911,9 @@ export class SDK {
   nftBuy(params: NftBuyParams) {
     return new Promise<NftBuyResData>((resolve, reject) => {
       const { amount, ...data } = params
+      const callback = (res: MetaIdJsRes) => {
+        this.callback(res, resolve)
+      }
       const _params = {
         data: {
           ...data,
@@ -866,15 +924,13 @@ export class SDK {
             }
           ]
         },
-        callback: (res: MetaIdJsRes) => {
-          this.callback(res, resolve)
-        }
+        callback
       }
       if (this.isApp) {
         const accessToken = this.getAccessToken()
         const functionName: string = `nftBuyCallBack`
         // @ts-ignore
-        window[functionName] = _params.callback
+        window[functionName] = callback
         // @ts-ignore
         if (window.appMetaIdJsV2) {
           // @ts-ignore
@@ -901,21 +957,21 @@ export class SDK {
   // nft 上架/销售
   nftSell(params: NftSellParams) {
     return new Promise<NftSellResData>((resolve, reject) => {
+      const callback = (res: MetaIdJsRes) => {
+        this.callback(res, resolve)
+      }
       const _params = {
         data: {
           ...params,
           payTo: [{ address: this.nftAppAddress, amount: 10000 }]
         },
-        callback: (res: MetaIdJsRes) => {
-          debugger
-          this.callback(res, resolve)
-        }
+        callback
       }
       if (this.isApp) {
         const accessToken = this.getAccessToken()
         const functionName: string = `nftSellCallBack`
         // @ts-ignore
-        window[functionName] = _params.callback
+        window[functionName] = callback
         // @ts-ignore
         if (window.appMetaIdJsV2) {
           // @ts-ignore
@@ -942,15 +998,16 @@ export class SDK {
   // nft 下架/取消销售
   nftCancel(params: NftCancelParams) {
     return new Promise<NFTCancelResData>((resolve, reject) => {
+      const callback = (res: MetaIdJsRes) => {
+        this.callback(res, resolve)
+      }
       const _params = {
         data: {
           outputIndex: 0,
           payTo: [{ address: this.nftAppAddress, amount: 10000 }],
           ...params
         },
-        callback: (res: MetaIdJsRes) => {
-          this.callback(res, resolve)
-        }
+        callback
         // onCancel: (msg: any) => {
         //   debugger
         // }
@@ -959,7 +1016,7 @@ export class SDK {
         const accessToken = this.getAccessToken()
         const functionName: string = `nftCancelCallBack`
         // @ts-ignore
-        window[functionName] = _params.callback
+        window[functionName] = callback
         // @ts-ignore
         if (window.appMetaIdJsV2) {
           // @ts-ignore
@@ -1044,6 +1101,263 @@ export class SDK {
         }
       }
     )
+  }
+
+  // 获取txId的内容
+  getTxData = (
+    txId: string,
+    currentTimer: number = 0,
+    maxTimer: number = 10,
+    parentResolve?: Function
+  ) => {
+    return new Promise<ShowManRes>(async (resolve, reject) => {
+      const _currentTimer = currentTimer + 1
+      const res = await this.queryFindMetaDataForPost({
+        find: {
+          txId
+        },
+        skip: 0
+      })?.catch(() => {
+        this.getTxData(
+          txId,
+          _currentTimer,
+          maxTimer,
+          parentResolve ? parentResolve : resolve
+        )
+      })
+      if (
+        res.code === 200 &&
+        res.result &&
+        res.result.data &&
+        res.result.data.length > 0
+      ) {
+        parentResolve ? parentResolve(res) : resolve(res)
+      } else {
+        if (_currentTimer >= maxTimer) {
+          reject()
+        } else {
+          setTimeout(() => {
+            this.getTxData(
+              txId,
+              _currentTimer,
+              maxTimer,
+              parentResolve ? parentResolve : resolve
+            )
+          }, 1000)
+        }
+      }
+    })
+  }
+
+  getMetaIdInfo = (metaId: string) => {
+    return this.axios?.post(`/v2showMANDB/api/v1/query/getMetaIDInfo/${metaId}`)
+  }
+
+  // 发布付费文章逻辑 1.createMetaAccessContentProtocol 2.createMetaAccessProtocol
+  async createMetaAccessArticle(params: CreateMetaAccessProrocolParams) {
+    return new Promise<{
+      metaAccessContenttxId: string
+      metaAccessTxId: string
+    }>(async (resolve, reject) => {
+      // 1.createMetaAccessContentProtocol
+      const { amount, ..._params } = params
+      const res = await this.createMetaAccessContentProtocol(_params).catch(
+        () => reject()
+      )
+      if (res && res.code === 200) {
+        // 获取createMetaAccessContent 链上上信息的metanetId
+        // @ts-ignore
+        const metaAccessContentrRes: any = await this.getTxData(
+          res.data.txId
+        ).catch(() => reject())
+        if (
+          metaAccessContentrRes.code === 200 &&
+          metaAccessContentrRes.result &&
+          metaAccessContentrRes.result.data.length > 0
+        ) {
+          // 延时，防止双花
+          setTimeout(async () => {
+            // 2.createMetaAccessProtocol
+            const response = await this.createMetaAccessProtocol({
+              createTime: _params.createTime,
+              updateTime: _params.createTime,
+              metaAccessContentMetanetID:
+                metaAccessContentrRes.result.data[0].metanetId,
+              validityBegin: _params.createTime,
+              amount
+            }).catch(() => {
+              reject()
+            })
+            debugger
+            if (response && response.code === 200) {
+              resolve({
+                metaAccessContenttxId: res.data.txId,
+                metaAccessTxId: response.data.txId
+              })
+            }
+          }, 10000)
+        }
+      }
+    })
+  }
+
+  // 创建付费文章内容协议
+  async createMetaAccessContentProtocol(
+    params: CreateMetaAccessContentProrocolParams
+  ) {
+    const { data, attachments } = await setAttachments(params, [
+      { name: 'cover', encrypt: Encrypt.No }
+    ])
+    return this.sendMetaDataTx({
+      data: JSON.stringify({
+        ...data,
+        publicContentType: 'text/plain',
+        encryptContentType: 'text/plain'
+      }),
+      ecdh: {
+        publickey: params.serverPublicKey,
+        type: 'encryptContent'
+      },
+      nodeName: 'MetaAccessContent',
+      brfcId: '937928add3f2',
+      path: '/Protocols/MetaAccessContent',
+      attachments
+    })
+  }
+
+  // 创建付费文章价格协议
+  async createMetaAccessProtocol(params: {
+    createTime: number
+    updateTime: number
+    metaAccessContentMetanetID: String
+    amount: number
+    validityBegin: number
+  }) {
+    return this.sendMetaDataTx({
+      data: JSON.stringify(params),
+      nodeName: 'MetaAccess',
+      brfcId: '1c0610ccb2d9',
+      path: '/Protocols/MetaAccess'
+    })
+  }
+
+  // 购买文章
+  createMetaAccessPayProtocol(params: {
+    amount: number
+    metaAccessService: string
+    metaAccessServiceConfigTx: string
+    metaAccessServiceConfigMetanetID: string
+    metaAccessTx: string
+  }) {
+    return new Promise<MetaIdJsRes>(async (resolve, reject) => {
+      const { amount, ...data } = params
+      Promise.all([
+        // 查metaAccess 内容获取 metaAccessMetanetID
+        this.getTxData(params.metaAccessTx),
+        // 查metaAccessService 内容获取 服务器费用
+        this.getTxData(params.metaAccessServiceConfigTx),
+        // 查metaAccessService的信息 内容获取 服务器费用收钱地址
+        this.getMetaIdInfo(params.metaAccessService)
+      ])
+        .then(async ([metaAcces, metaAccessService, metaAccessServiceInfo]) => {
+          const payTo = [
+            // 服务商费用
+            {
+              amount: metaAccessService.result.data[0].fee,
+              address: metaAccessServiceInfo.result.address
+            }
+            // 没有铸造成NFT时，是转给作者费用， 已是nft则转给NFT拥有者的费用
+            // { amount: amount, address: metaAccessServiceInfo.result.address },
+          ]
+          const res = await this.sendMetaDataTx({
+            data: JSON.stringify({
+              createTime: new Date().getTime(),
+              metaAccessMetanetID: metaAcces.result.data[0].metanetId,
+              ...data
+            }),
+            brfcId: '312a894b1e17',
+            nodeName: 'MetaAccessPay',
+            path: '/Protocols/MetaAccessPay',
+            payTo
+          }).catch(() => reject())
+          if (res) {
+            resolve(res)
+          }
+        })
+        .catch(() => reject())
+    })
+  }
+
+  // 获取用户支付 付费文章的tx内容
+  getUserMetaAccessPayTxData(params: {
+    metaAccessServiceConfigMetanetID: string
+    metaAccessServiceConfigTx: string
+    metaAccessService: string
+    metaAccessMetanetID: string
+    metaAccessTx: string
+    metaId: string
+  }) {
+    return new Promise(async (resolve, reject) => {
+      const _params: any = {
+        find: {
+          'data.metaAccessServiceConfigMetanetID':
+            params.metaAccessServiceConfigMetanetID,
+          'data.metaAccessServiceConfigTx': params.metaAccessServiceConfigTx,
+          'data.metaAccessService': params.metaAccessService,
+          'data.metaAccessMetanetID': params.metaAccessMetanetID,
+          'data.metaAccessTx': params.metaAccessTx,
+          rootTxId: params.metaId,
+          parentNodeName: 'MetaAccessPay'
+        },
+        skip: 0
+      }
+      const res = await this.queryFindMetaDataForPost(_params)?.catch(() =>
+        reject()
+      )
+      if (res.code === 0 && res.result.data.length > 0) {
+        resolve(res.result.data[0])
+      } else {
+        reject()
+      }
+    })
+  }
+
+  // 上链付费阅读服务器
+  async createMetaAccessServiceConfig() {
+    return new Promise<void>(async (resolve) => {
+      const res = await this.queryFindMetaDataForPost({
+        find: {
+          'data.metaID':
+            'b371fd7e895f107b300ed79b24da050a129c570d783b9e75a98478eb54df17e6',
+          parentNodeName: 'MetaAccessServiceConfig'
+        },
+        skip: 0
+      })
+
+      if (res.code === 0) {
+        if (res.result.data.length > 0) {
+          resolve()
+        } else {
+          await this.sendMetaDataTx({
+            path: '/Protocols/MetaAccessServiceConfig',
+            brfcId: '8357da96e017',
+            nodeName: 'MetaAccessServiceConfig',
+            data: JSON.stringify({
+              metaID:
+                'b371fd7e895f107b300ed79b24da050a129c570d783b9e75a98478eb54df17e6',
+              createTime: Date.now(),
+              updateTime: Date.now(),
+              name: 'Test',
+              fee: 1000,
+              url: 'https://testshowman.showpay.io/metaaccess/'
+            })
+          })
+          resolve()
+        }
+      } else {
+        new Error('查询付费阅读服务失败')
+      }
+    })
   }
 }
 
@@ -1131,18 +1445,33 @@ export function setAttachments(
       data: string
       encrypt: Encrypt
     }[] = []
+    let attachmentIndex = 0
     const data = { ..._data }
-    fileAttrs.map((item, index) => {
+    fileAttrs.map((item) => {
       for (let i in data) {
         if (i === item.name) {
           if (typeof data[i] !== 'string') {
-            attachments.push({
-              fileName: data[i].name,
-              fileType: data[i].data_type,
-              data: data[i].hexData,
-              encrypt: item.encrypt
-            })
-            data[i] = `![metafile](${index})`
+            if (data[i] instanceof Array) {
+              for (let u = 0; u < data[i].length; u++) {
+                attachments.push({
+                  fileName: data[i][u].name,
+                  fileType: data[i][u].data_type,
+                  data: data[i][u].hexData,
+                  encrypt: item.encrypt
+                })
+                data[i][u] = `![metafile](${attachmentIndex})`
+                attachmentIndex += 1
+              }
+            } else {
+              attachments.push({
+                fileName: data[i].name,
+                fileType: data[i].data_type,
+                data: data[i].hexData,
+                encrypt: item.encrypt
+              })
+              data[i] = `![metafile](${attachmentIndex})`
+              attachmentIndex += 1
+            }
           }
         }
       }
