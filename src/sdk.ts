@@ -379,7 +379,10 @@ export class SDK {
         callback
       }
       if (this.type === SdkType.App) {
-        const functionName: string = `getUserInfoCallBack`
+        const functionName: string = `getUserInfoCallBack${uuid().replace(
+          /-/g,
+          ''
+        )}`
         // @ts-ignore
         window[functionName] = callback
         if ((window as any).appMetaIdJsV2) {
@@ -439,7 +442,10 @@ export class SDK {
         reject(res)
       }
       if (this.type === SdkType.App) {
-        const functionName: string = `sendMetaDataTxCallBack`
+        const functionName: string = `sendMetaDataTxCallBack${uuid().replace(
+          /-/g,
+          ''
+        )}`
         // @ts-ignore
         window[functionName] = callback
         if ((window as any).appMetaIdJsV2) {
@@ -495,7 +501,10 @@ export class SDK {
         data: JSON.stringify(data)
       }
       if (this.type === SdkType.App) {
-        const functionName: string = `ecdhDecryptDataCallBack`
+        const functionName: string = `ecdhDecryptDataCallBack${uuid().replace(
+          /-/g,
+          ''
+        )}`
         // @ts-ignore
         window[functionName] = callback
         if ((window as any).appMetaIdJsV2) {
@@ -525,6 +534,48 @@ export class SDK {
     })
   }
 
+  // ecies 加密 app未检测
+  eciesEncryptData(data: string) {
+    return new Promise<MetaIdJsRes>((resolve) => {
+      const callback = (res: MetaIdJsRes) => {
+        this.callback(res, resolve)
+      }
+      const _params = {
+        callback,
+        accessToken: this.getAccessToken(),
+        data
+      }
+      if (this.type === SdkType.App) {
+        const functionName: string = `eciesDecryptDataCallBack${uuid().replace(
+          /-/g,
+          ''
+        )}`
+        // @ts-ignore
+        window[functionName] = callback
+        if ((window as any).appMetaIdJsV2) {
+          ;(window as any).appMetaIdJsV2?.decryptData(
+            _params.accessToken,
+            data,
+            functionName
+          )
+        } else {
+          ;(window as any).appMetaIdJs?.decryptData(
+            _params.accessToken,
+            data,
+            functionName
+          )
+        }
+      } else if (this.type === SdkType.Metaidjs) {
+        this.metaidjs?.eciesEncryptData(_params)
+      } else {
+        // 待兼容
+        // @ts-ignore
+        this.dotwalletjs.eciesEncryptData(_params)
+      }
+    })
+  }
+
+  // ecies 解密
   eciesDecryptData(data: string) {
     return new Promise<MetaIdJsRes>((resolve) => {
       const callback = (res: MetaIdJsRes) => {
@@ -536,7 +587,10 @@ export class SDK {
         data
       }
       if (this.type === SdkType.App) {
-        const functionName: string = `eciesDecryptDataCallBack`
+        const functionName: string = `eciesDecryptDataCallBack${uuid().replace(
+          /-/g,
+          ''
+        )}`
         // @ts-ignore
         window[functionName] = callback
         if ((window as any).appMetaIdJsV2) {
@@ -567,7 +621,7 @@ export class SDK {
     return new Promise<GetBalanceRes>((resolve) => {
       if (this.isApp) {
         const token = this.getAccessToken()
-        const functionName = 'getBalanceCallBack'
+        const functionName = `getBalanceCallBack${uuid().replace(/-/g, '')}`
         ;(window as any)[functionName] = (_res: string) => {
           const res = JSON.parse(_res)
           const bsv = res.data
@@ -821,7 +875,10 @@ export class SDK {
         callback
       }
       if (this.isApp) {
-        const functionName: string = `genesisNFTCallBack`
+        const functionName: string = `genesisNFTCallBack${uuid().replace(
+          /-/g,
+          ''
+        )}`
         ;(window as any)[functionName] = callback
         const accessToken = this.getAccessToken()
         if ((window as any).appMetaIdJsV2) {
@@ -884,7 +941,10 @@ export class SDK {
         callback
       }
       if (this.isApp) {
-        const functionName: string = `issueNFTCallBack`
+        const functionName: string = `issueNFTCallBack${uuid().replace(
+          /-/g,
+          ''
+        )}${uuid().replace(/-/g, '')}`
         ;(window as any)[functionName] = callback
         const accessToken = this.getAccessToken()
         if ((window as any).appMetaIdJsV2) {
@@ -928,7 +988,7 @@ export class SDK {
       }
       if (this.isApp) {
         const accessToken = this.getAccessToken()
-        const functionName: string = `nftBuyCallBack`
+        const functionName: string = `nftBuyCallBack${uuid().replace(/-/g, '')}`
         // @ts-ignore
         window[functionName] = callback
         // @ts-ignore
@@ -969,7 +1029,10 @@ export class SDK {
       }
       if (this.isApp) {
         const accessToken = this.getAccessToken()
-        const functionName: string = `nftSellCallBack`
+        const functionName: string = `nftSellCallBack${uuid().replace(
+          /-/g,
+          ''
+        )}`
         // @ts-ignore
         window[functionName] = callback
         // @ts-ignore
@@ -1014,7 +1077,10 @@ export class SDK {
       }
       if (this.isApp) {
         const accessToken = this.getAccessToken()
-        const functionName: string = `nftCancelCallBack`
+        const functionName: string = `nftCancelCallBack${uuid().replace(
+          /-/g,
+          ''
+        )}${uuid().replace(/-/g, '')}`
         // @ts-ignore
         window[functionName] = callback
         // @ts-ignore
