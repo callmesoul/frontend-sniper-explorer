@@ -839,6 +839,7 @@ export class SDK {
   genesisNFT(params: NFTGenesisParams): Promise<SdkGenesisNFTRes> {
     return new Promise<SdkGenesisNFTRes>((resolve, reject) => {
       const callback = (res: SdkGenesisNFTRes) => {
+        if (typeof res === 'string') res = JSON.parse(res)
         this.callback(res, resolve)
       }
       const _params = {
@@ -936,6 +937,7 @@ export class SDK {
   issueNFT(params: NFTIssueParams) {
     return new Promise<IssueNFTResData>((resolve, reject) => {
       const callback = (res: MetaIdJsRes) => {
+        if (typeof res === 'string') res = JSON.parse(res)
         this.callback(res, resolve)
       }
       const _params = {
@@ -1067,6 +1069,7 @@ export class SDK {
   nftCancel(params: NftCancelParams) {
     return new Promise<NFTCancelResData>((resolve, reject) => {
       const callback = (res: MetaIdJsRes) => {
+        if (typeof res === 'string') res = JSON.parse(res)
         this.callback(res, resolve)
       }
       const _params = {
