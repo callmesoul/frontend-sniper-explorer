@@ -367,6 +367,7 @@ export class SDK {
   getUserInfo() {
     return new Promise<MetaIdJsRes>(async (resolve) => {
       const callback = (res: MetaIdJsRes) => {
+        if (typeof res === 'string') res = JSON.parse(res)
         if (res) {
           if (res.code === 200 && !res.data.metaId) {
             res.data.metaId = res.data.showId
@@ -436,6 +437,7 @@ export class SDK {
       if (!params.encoding) params.encoding = 'UTF-8'
       const accessToken = this.getAccessToken()
       const callback = (res: MetaIdJsRes) => {
+        if (typeof res === 'string') res = JSON.parse(res)
         this.callback(res, resolve)
       }
       const onCancel = (res: MetaIdJsRes) => {
@@ -493,6 +495,7 @@ export class SDK {
   }) {
     return new Promise<MetaIdJsRes>((resolve) => {
       const callback = (res: MetaIdJsRes) => {
+        if (typeof res === 'string') res = JSON.parse(res)
         this.callback(res, resolve)
       }
       const _params = {
@@ -538,6 +541,7 @@ export class SDK {
   eciesEncryptData(data: string) {
     return new Promise<MetaIdJsRes>((resolve) => {
       const callback = (res: MetaIdJsRes) => {
+        if (typeof res === 'string') res = JSON.parse(res)
         this.callback(res, resolve)
       }
       const _params = {
@@ -579,6 +583,7 @@ export class SDK {
   eciesDecryptData(data: string) {
     return new Promise<MetaIdJsRes>((resolve) => {
       const callback = (res: MetaIdJsRes) => {
+        if (typeof res === 'string') res = JSON.parse(res)
         this.callback(res, resolve)
       }
       const _params = {
