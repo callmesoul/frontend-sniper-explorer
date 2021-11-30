@@ -365,7 +365,7 @@ export class SDK {
   }
 
   getUserInfo() {
-    return new Promise<MetaIdJsRes>(async (resolve) => {
+    return new Promise<MetaIdJsRes>(async (resolve, reject) => {
       const callback = (res: MetaIdJsRes) => {
         if (typeof res === 'string') res = JSON.parse(res)
         if (res) {
@@ -373,7 +373,7 @@ export class SDK {
             res.data.metaId = res.data.showId
           }
         }
-        this.callback(res, resolve)
+        this.callback(res, resolve, reject)
       }
       const params = {
         accessToken: this.getAccessToken(),
@@ -437,8 +437,7 @@ export class SDK {
       if (!params.encoding) params.encoding = 'UTF-8'
       const accessToken = this.getAccessToken()
       const callback = (res: MetaIdJsRes) => {
-        if (typeof res === 'string') res = JSON.parse(res)
-        this.callback(res, resolve)
+        this.callback(res, resolve, reject)
       }
       const onCancel = (res: MetaIdJsRes) => {
         reject(res)
@@ -493,10 +492,10 @@ export class SDK {
     metaDataPublicKey?: string
     path?: string
   }) {
-    return new Promise<MetaIdJsRes>((resolve) => {
+    return new Promise<MetaIdJsRes>((resolve, reject) => {
       const callback = (res: MetaIdJsRes) => {
         if (typeof res === 'string') res = JSON.parse(res)
-        this.callback(res, resolve)
+        this.callback(res, resolve, reject)
       }
       const _params = {
         callback,
@@ -539,10 +538,9 @@ export class SDK {
 
   // ecies 加密 app未检测
   eciesEncryptData(data: string) {
-    return new Promise<MetaIdJsRes>((resolve) => {
+    return new Promise<MetaIdJsRes>((resolve, reject) => {
       const callback = (res: MetaIdJsRes) => {
-        if (typeof res === 'string') res = JSON.parse(res)
-        this.callback(res, resolve)
+        this.callback(res, resolve, reject)
       }
       const _params = {
         callback,
@@ -581,10 +579,9 @@ export class SDK {
 
   // ecies 解密
   eciesDecryptData(data: string) {
-    return new Promise<MetaIdJsRes>((resolve) => {
+    return new Promise<MetaIdJsRes>((resolve, reject) => {
       const callback = (res: MetaIdJsRes) => {
-        if (typeof res === 'string') res = JSON.parse(res)
-        this.callback(res, resolve)
+        this.callback(res, resolve, reject)
       }
       const _params = {
         callback,
@@ -623,7 +620,7 @@ export class SDK {
 
   // 获取用户余额
   getBalance() {
-    return new Promise<GetBalanceRes>((resolve) => {
+    return new Promise<GetBalanceRes>((resolve, reject) => {
       if (this.isApp) {
         const token = this.getAccessToken()
         const functionName = `getBalanceCallBack${uuid().replace(/-/g, '')}`
@@ -638,7 +635,8 @@ export class SDK {
                 satoshis: new Decimal(bsv).mul(Math.pow(10, 8))
               }
             },
-            resolve
+            resolve,
+            reject
           )
         }
         if ((window as any).appMetaIdJsV2) {
@@ -650,7 +648,7 @@ export class SDK {
         //@ts-ignore
         this.metaidjs.getBalance({
           callback: (res: GetBalanceRes) => {
-            this.callback(res, resolve)
+            this.callback(res, resolve, reject)
           }
         })
       }
@@ -663,12 +661,35 @@ export class SDK {
     resolve: {
       (value: MetaIdJsRes | PromiseLike<MetaIdJsRes>): void
       (arg0: MetaIdJsRes): void
-    }
+    },
+    reject: { (reason?: any): void; (): void }
   ) {
-    if (res.code !== 200) {
-      if (this.callBackFail) {
-        await this.callBackFail(res)
+    if (this.isApp && typeof res === 'string') {
+      try {
+        res = JSON.parse(res)
+      } catch (error) {
+        res = {
+          code: 400,
+          data: {
+            message: res
+          },
+          status: 'fail',
+          handlerId: ''
+        }
       }
+    }
+    if (res.code !== 200 && res.code !== 205) {
+      if (
+        res.data.message !==
+        'The NFT is not for sale because  the corresponding SellUtxo cannot be found.'
+      ) {
+        if (this.callBackFail) {
+          await this.callBackFail(res)
+        }
+      }
+      reject(res)
+    } else {
+      resolve(res)
     }
     resolve(res)
   }
@@ -839,8 +860,7 @@ export class SDK {
   genesisNFT(params: NFTGenesisParams): Promise<SdkGenesisNFTRes> {
     return new Promise<SdkGenesisNFTRes>((resolve, reject) => {
       const callback = (res: SdkGenesisNFTRes) => {
-        if (typeof res === 'string') res = JSON.parse(res)
-        this.callback(res, resolve)
+        this.callback(res, resolve, reject)
       }
       const _params = {
         data: {
@@ -937,8 +957,7 @@ export class SDK {
   issueNFT(params: NFTIssueParams) {
     return new Promise<IssueNFTResData>((resolve, reject) => {
       const callback = (res: MetaIdJsRes) => {
-        if (typeof res === 'string') res = JSON.parse(res)
-        this.callback(res, resolve)
+        this.callback(res, resolve, reject)
       }
       const _params = {
         data: {
@@ -979,7 +998,7 @@ export class SDK {
     return new Promise<NftBuyResData>((resolve, reject) => {
       const { amount, ...data } = params
       const callback = (res: MetaIdJsRes) => {
-        this.callback(res, resolve)
+        this.callback(res, resolve, reject)
       }
       const _params = {
         data: {
@@ -1025,7 +1044,7 @@ export class SDK {
   nftSell(params: NftSellParams) {
     return new Promise<NftSellResData>((resolve, reject) => {
       const callback = (res: MetaIdJsRes) => {
-        this.callback(res, resolve)
+        this.callback(res, resolve, reject)
       }
       const _params = {
         data: {
@@ -1069,8 +1088,7 @@ export class SDK {
   nftCancel(params: NftCancelParams) {
     return new Promise<NFTCancelResData>((resolve, reject) => {
       const callback = (res: MetaIdJsRes) => {
-        if (typeof res === 'string') res = JSON.parse(res)
-        this.callback(res, resolve)
+        this.callback(res, resolve, reject)
       }
       const _params = {
         data: {
