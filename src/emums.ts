@@ -19,3 +19,8 @@ export enum Encrypt {
   Yes = '1',
   No = '0'
 }
+
+export enum PayToAddressCurrency {
+  SATS = 'sats',
+  BSV = 'bsv'
+}
