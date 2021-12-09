@@ -621,11 +621,12 @@ export class SDK {
 
   // 支付某个地址
   payToAddress(params: {
-    to: PayToItem
+    to: PayToItem[]
     opReturn?: string
     currency?: PayToAddressCurrency
   }) {
-    return new Promise<MetaIdJsRes>((resolve, reject) => {
+    return new Promise<MetaIdJsRes>(async (resolve, reject) => {
+      await this.checkSdkType()
       const callback = (res: MetaIdJsRes) => {
         this.callback(res, resolve, reject)
       }
@@ -655,7 +656,7 @@ export class SDK {
         }
       } else if (this.type === SdkType.Metaidjs) {
         this.metaidjs?.payToAddress({
-          data: params,
+          data: JSON.stringify(params),
           accessToken,
           callback
         })
@@ -1501,6 +1502,16 @@ export class SDK {
         }
       } else {
         new Error('查询付费阅读服务失败')
+      }
+    })
+  }
+
+  checkSdkType() {
+    return new Promise<void>((resolve, reject) => {
+      if (this.type === SdkType.Null) {
+        reject('sdk not set')
+      } else {
+        resolve()
       }
     })
   }
