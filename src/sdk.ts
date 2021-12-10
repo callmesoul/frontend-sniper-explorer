@@ -33,6 +33,7 @@ import {
 } from './types/sdk'
 import { Encrypt, Lang, PayToAddressCurrency, SdkType } from './emums'
 import { Buffer } from 'buffer'
+import pack from '../package.json'
 
 export class SDK {
   // @ts-ignore
@@ -615,59 +616,6 @@ export class SDK {
         // 待兼容
         // @ts-ignore
         this.dotwalletjs.eciesDecryptData(_params)
-      }
-    })
-  }
-
-  // 支付某个地址
-  payToAddress(params: {
-    to: PayToItem[]
-    opReturn?: string
-    currency?: PayToAddressCurrency
-  }) {
-    return new Promise<MetaIdJsRes>(async (resolve, reject) => {
-      await this.checkSdkType()
-      const callback = (res: MetaIdJsRes) => {
-        this.callback(res, resolve, reject)
-      }
-      if (!params.currency) params.currency = PayToAddressCurrency.SATS
-      if (!params.opReturn) params.opReturn = ''
-      const accessToken = this.getAccessToken()
-      if (this.type === SdkType.App) {
-        const functionName: string = `payToAddressCallBack${uuid().replace(
-          /-/g,
-          ''
-        )}`
-        // 待兼容
-        // @ts-ignore
-        window[functionName] = callback
-        if ((window as any).appMetaIdJsV2) {
-          ;(window as any).appMetaIdJsV2?.payToAddress(
-            accessToken,
-            JSON.stringify(params),
-            functionName
-          )
-        } else {
-          ;(window as any).appMetaIdJs?.payToAddress(
-            accessToken,
-            JSON.stringify(params),
-            functionName
-          )
-        }
-      } else if (this.type === SdkType.Metaidjs) {
-        this.metaidjs?.payToAddress({
-          data: JSON.stringify(params),
-          accessToken,
-          callback
-        })
-      } else {
-        // 待兼容
-        // @ts-ignore
-        this.dotwalletjs.payToAddress({
-          data: params,
-          accessToken,
-          callback
-        })
       }
     })
   }
@@ -1635,3 +1583,5 @@ export function setAttachments(
     resolve({ data, attachments })
   })
 }
+
+export const verion = pack.verion
