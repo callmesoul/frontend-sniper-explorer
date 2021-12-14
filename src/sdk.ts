@@ -430,6 +430,7 @@ export class SDK {
       publickey: string // 加密用的 publickey
       type: string // data 里面要加密的字段
     }
+    nodeKey?: string // 编辑数据时需要指定当前节点的 publicKey
   }) {
     return new Promise<SendMetaDataTxRes>(async (resolve, reject) => {
       if (!params.payCurrency) params.payCurrency = 'BSV'
