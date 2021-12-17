@@ -382,7 +382,7 @@ export class SDK {
         callback
       }
       if (this.type === SdkType.App) {
-        const functionName: string = `getUserInfoCallBack${Math.random()}`
+        const functionName: string = `getUserInfoCallBack${randomString()}`
         // @ts-ignore
         window[functionName] = callback
         if ((window as any).appMetaIdJsV2) {
@@ -443,7 +443,7 @@ export class SDK {
         reject(res)
       }
       if (this.type === SdkType.App) {
-        const functionName: string = `sendMetaDataTxCallBack${Math.random()}`
+        const functionName: string = `sendMetaDataTxCallBack${randomString()}`
         // @ts-ignore
         window[functionName] = callback
         if ((window as any).appMetaIdJsV2) {
@@ -500,7 +500,7 @@ export class SDK {
         data: JSON.stringify(data)
       }
       if (this.type === SdkType.App) {
-        const functionName: string = `ecdhDecryptDataCallBack${Math.random()}`
+        const functionName: string = `ecdhDecryptDataCallBack${randomString()}`
         // @ts-ignore
         window[functionName] = callback
         if ((window as any).appMetaIdJsV2) {
@@ -542,7 +542,7 @@ export class SDK {
         data
       }
       if (this.type === SdkType.App) {
-        const functionName: string = `eciesDecryptDataCallBack${Math.random()}`
+        const functionName: string = `eciesDecryptDataCallBack${randomString()}`
         // @ts-ignore
         window[functionName] = callback
         if ((window as any).appMetaIdJsV2) {
@@ -595,7 +595,7 @@ export class SDK {
         data
       }
       if (this.type === SdkType.App) {
-        const functionName: string = `eciesDecryptDataCallBack${Math.random()}`
+        const functionName: string = `eciesDecryptDataCallBack${randomString()}`
         // @ts-ignore
         window[functionName] = callback
         if ((window as any).appMetaIdJsV2) {
@@ -626,7 +626,7 @@ export class SDK {
     return new Promise<GetBalanceRes>((resolve, reject) => {
       if (this.isApp) {
         const token = this.getAccessToken()
-        const functionName = `getBalanceCallBack${Math.random()}`
+        const functionName = `getBalanceCallBack${randomString()}`
         ;(window as any)[functionName] = (_res: string) => {
           const res = JSON.parse(_res)
           const bsv = res.data
@@ -904,7 +904,7 @@ export class SDK {
         callback
       }
       if (this.isApp) {
-        const functionName: string = `genesisNFTCallBack${Math.random()}`
+        const functionName: string = `genesisNFTCallBack${randomString()}`
         ;(window as any)[functionName] = callback
         const accessToken = this.getAccessToken()
         if ((window as any).appMetaIdJsV2) {
@@ -967,7 +967,7 @@ export class SDK {
         callback
       }
       if (this.isApp) {
-        const functionName: string = `issueNFTCallBack${Math.random()}`
+        const functionName: string = `issueNFTCallBack${randomString()}`
         ;(window as any)[functionName] = callback
         const accessToken = this.getAccessToken()
         if ((window as any).appMetaIdJsV2) {
@@ -1011,7 +1011,7 @@ export class SDK {
       }
       if (this.isApp) {
         const accessToken = this.getAccessToken()
-        const functionName: string = `nftBuyCallBack${Math.random()}`
+        const functionName: string = `nftBuyCallBack${randomString()}`
         // @ts-ignore
         window[functionName] = callback
         // @ts-ignore
@@ -1052,7 +1052,7 @@ export class SDK {
       }
       if (this.isApp) {
         const accessToken = this.getAccessToken()
-        const functionName: string = `nftSellCallBack${Math.random()}`
+        const functionName: string = `nftSellCallBack${randomString()}`
         // @ts-ignore
         window[functionName] = callback
         // @ts-ignore
@@ -1097,7 +1097,7 @@ export class SDK {
       }
       if (this.isApp) {
         const accessToken = this.getAccessToken()
-        const functionName: string = `nftCancelCallBack${Math.random()}`
+        const functionName: string = `nftCancelCallBack${randomString()}`
         // @ts-ignore
         window[functionName] = callback
         // @ts-ignore
@@ -1571,6 +1571,10 @@ export function setAttachments(
     })
     resolve({ data, attachments })
   })
+}
+
+export function randomString() {
+  return Math.random().toString().replace('.', '')
 }
 
 export const verion = pack.verion
