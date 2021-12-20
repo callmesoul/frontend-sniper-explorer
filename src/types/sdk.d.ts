@@ -371,3 +371,8 @@ export interface CreateMetaAccessProrocolParams
   extends CreateMetaAccessContentProrocolParams {
   amount: number
 }
+export interface AppMsg {
+  name: string
+  website: string
+  isProduction: boolean
+}

@@ -29,7 +29,8 @@ import {
   CreateMetaAccessProrocolParams,
   CreateMetaAccessContentProrocolParams,
   ShowManRes,
-  PayToItem
+  PayToItem,
+  AppMsg
 } from './types/sdk'
 import { Encrypt, Lang, PayToAddressCurrency, SdkType } from './emums'
 import { Buffer } from 'buffer'
@@ -96,8 +97,10 @@ export class SDK {
   axios: AxiosInstance | null = null
   isSdkFinish: boolean = false // 是否已初始化完成
   nftAppAddress = '16tp7PhBjvYpHcv53AXkHYHTynmy6xQnxy' // Nft收手续费的地址
+  appMsg: AppMsg | null = null
 
   constructor(options: {
+    appMsg: AppMsg
     metaIdTag: string
     showmoneyApi: string
     getAccessToken: Function
@@ -109,6 +112,7 @@ export class SDK {
     metaidjsOptions: SdkMetaidJsOptionsTypes
     dotwalletOptions: DotWalletConfig
   }) {
+    this.appMsg = options.appMsg
     this.metaIdTag = options.metaIdTag
     this.getAccessToken = options.getAccessToken
     this.metaidjsOptions = options.metaidjsOptions
@@ -472,7 +476,14 @@ export class SDK {
           ;(window as any).handleNotEnoughMoney = (res: MetaIdJsRes) => {
             reject()
           }
-          this.metaidjs?.sendMetaDataTx(_params)
+          this.metaidjs?.sendMetaDataTx({
+            ..._params,
+            appId: [
+              this.appMsg?.name,
+              this.appMsg?.isProduction ? this.appMsg?.website : 'XXXX',
+              'web'
+            ]
+          })
         } else {
           this.dotwalletjs?.sendMetaDataTx({
             ..._params,
