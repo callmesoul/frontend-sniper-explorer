@@ -32,7 +32,7 @@ import {
   PayToItem,
   AppMsg
 } from './types/sdk'
-import { Encrypt, Lang, PayToAddressCurrency, SdkType } from './emums'
+import { AppMode, Encrypt, Lang, PayToAddressCurrency, SdkType } from './emums'
 import { Buffer } from 'buffer'
 import pack from '../package.json'
 
@@ -96,7 +96,10 @@ export class SDK {
   callBackFail?: (error: MetaIdJsRes) => Promise<void> | null = undefined // 统一回调错误处理
   axios: AxiosInstance | null = null
   isSdkFinish: boolean = false // 是否已初始化完成
-  nftAppAddress = '16tp7PhBjvYpHcv53AXkHYHTynmy6xQnxy' // Nft收手续费的地址
+  appAddress = {
+    [AppMode.PROD]: '19NeJJM6eEa3bruYnqkTA4Cp6VvdFGSepd',
+    [AppMode.TEST]: '1BrfsynMJ56gc2HFicgpBhEKRtRQYTm82E'
+  } // Nft收手续费的地址
   appMsg: AppMsg | null = null
 
   constructor(options: {
@@ -157,6 +160,17 @@ export class SDK {
       this.appScrect = this.metaidjsOptions.oauthSettings.clientSecret!
     }
     window.localStorage.setItem('appType', type.toString())
+  }
+
+  getAppAddress() {
+    const env =
+      this.appMsg?.isProduction ||
+      this.appMsg?.mode === AppMode.PROD ||
+      this.appMsg?.mode === AppMode.GRAY
+        ? AppMode.PROD
+        : AppMode.TEST
+
+    return this.appAddress[env]
   }
 
   // 初始化 sdk
@@ -485,7 +499,9 @@ export class SDK {
             ..._params,
             appId: [
               this.appMsg?.name,
-              this.appMsg?.isProduction ? this.appMsg?.website : 'XXXX',
+              this.appMsg?.isProduction || this.appMsg?.mode === AppMode.PROD
+                ? this.appMsg?.website
+                : 'XXXX',
               'web'
             ]
           })
@@ -977,7 +993,7 @@ export class SDK {
       }
       const _params = {
         data: {
-          payTo: [{ address: this.nftAppAddress, amount: 10000 }],
+          payTo: [{ address: this.getAppAddress(), amount: 10000 }],
           ...params
         },
         callback
@@ -1018,7 +1034,7 @@ export class SDK {
           ...data,
           payTo: [
             {
-              address: this.nftAppAddress,
+              address: this.getAppAddress(),
               amount: Math.ceil(new Decimal(amount * 0.05).toNumber())
             }
           ]
@@ -1062,7 +1078,7 @@ export class SDK {
       const _params = {
         data: {
           ...params,
-          payTo: [{ address: this.nftAppAddress, amount: 10000 }]
+          payTo: [{ address: this.getAppAddress(), amount: 10000 }]
         },
         callback
       }
@@ -1103,7 +1119,7 @@ export class SDK {
       const _params = {
         data: {
           outputIndex: 0,
-          payTo: [{ address: this.nftAppAddress, amount: 10000 }],
+          payTo: [{ address: this.getAppAddress(), amount: 10000 }],
           ...params
         },
         callback

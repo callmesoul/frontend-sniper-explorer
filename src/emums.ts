@@ -24,3 +24,9 @@ export enum PayToAddressCurrency {
   SATS = 'sats',
   BSV = 'bsv'
 }
+export enum AppMode {
+  PROD = 'prod',
+  GRAY = 'gray',
+  TEST = 'test',
+  DEV2 = 'dev2'
+}

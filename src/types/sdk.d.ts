@@ -374,5 +374,6 @@ export interface CreateMetaAccessProrocolParams
 export interface AppMsg {
   name: string
   website: string
-  isProduction: boolean
+  mode: AppMode
+  isProduction?: boolean // 保留 isProduction 兼容旧版本
 }
