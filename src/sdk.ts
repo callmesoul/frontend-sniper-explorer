@@ -1207,7 +1207,8 @@ export class SDK {
     txId: string,
     currentTimer: number = 0,
     maxTimer: number = 10,
-    parentResolve?: Function
+    parentResolve?: Function,
+    parentReject?: Function
   ) => {
     return new Promise<ShowManRes>(async (resolve, reject) => {
       const _currentTimer = currentTimer + 1
@@ -1221,7 +1222,8 @@ export class SDK {
           txId,
           _currentTimer,
           maxTimer,
-          parentResolve ? parentResolve : resolve
+          parentResolve ? parentResolve : resolve,
+          parentReject ? parentReject : reject
         )
       })
       if (
@@ -1233,14 +1235,16 @@ export class SDK {
         parentResolve ? parentResolve(res) : resolve(res)
       } else {
         if (_currentTimer >= maxTimer) {
-          reject()
+          const msg = 'get TxId fail'
+          parentReject ? parentReject(msg) : reject(msg)
         } else {
           setTimeout(() => {
             this.getTxData(
               txId,
               _currentTimer,
               maxTimer,
-              parentResolve ? parentResolve : resolve
+              parentResolve ? parentResolve : resolve,
+              parentReject ? parentReject : reject
             )
           }, 1000)
         }
