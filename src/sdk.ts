@@ -237,7 +237,12 @@ export class SDK {
       new Error('App环境下没有login函数')
       return
     } else if (this.type === SdkType.Metaidjs) {
-      const url = `${this.metaidjsOptions.baseUri}/userLogin?response_type=code&client_id=${this.appId}&redirect_uri=${this.metaidjsOptions.oauthSettings.redirectUri}&scope=app&from=${this.metaidjsOptions.oauthSettings.redirectUri}`
+      let url = `${this.metaidjsOptions.baseUri}/userLogin?response_type=code&client_id=${this.appId}&redirect_uri=${this.metaidjsOptions.oauthSettings.redirectUri}&scope=app&from=${this.metaidjsOptions.oauthSettings.redirectUri}`
+      // 添加推荐码
+      const refCode = localStorage.getItem('refCode')
+      if (refCode) {
+        url = `${url}&reCode=${refCode}`
+      }
       window.location.href = url
     } else {
       if (this.dotwalletjs) {
