@@ -255,7 +255,7 @@ export class SDK {
       // 添加推荐码
       const refCode = localStorage.getItem('refCode')
       if (refCode) {
-        url = `${url}&reCode=${refCode}`
+        url = `${url}&refCode=${refCode}`
       }
       window.location.href = url
     } else {
