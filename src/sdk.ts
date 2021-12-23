@@ -34,7 +34,7 @@ import {
 } from './types/sdk'
 import { AppMode, Encrypt, Lang, PayToAddressCurrency, SdkType } from './emums'
 import { Buffer } from 'buffer'
-import pack from '../package.json'
+import pkg from '../package.json'
 
 export class SDK {
   // @ts-ignore
@@ -1613,4 +1613,4 @@ export function randomString() {
   return Math.random().toString().replace('.', '')
 }
 
-export const verion = pack.verion
+export const version = pkg.version
