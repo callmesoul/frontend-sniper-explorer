@@ -30,12 +30,17 @@ import {
   CreateMetaAccessContentProrocolParams,
   ShowManRes,
   PayToItem,
-  AppMsg
+  AppMsg,
+  SendMetaDataTxParams,
+  CreateMetaFileProtocolOption,
+  SendMetaFileRes
 } from './types/sdk'
 import { AppMode, Encrypt, Lang, PayToAddressCurrency, SdkType } from './emums'
-import { Buffer } from 'buffer'
+import { Blob, Buffer } from 'buffer'
 import pkg from '../package.json'
+import { MD5, SHA256 } from 'crypto-js'
 
+const METAFILE_SLICE_SIZE = 1024 * 200
 export class SDK {
   // @ts-ignore
   metaidjs: null | MetaIdJs = null
@@ -432,26 +437,7 @@ export class SDK {
     })
   }
 
-  sendMetaDataTx(params: {
-    data: string
-    nodeName: string
-    brfcId: string
-    attachments?: string[]
-    path: string
-    payCurrency?: string
-    payTo?: { amount: number; address: string }[]
-    needConfirm?: boolean
-    encrypt?: Encrypt
-    dataType?: string
-    encoding?: string
-    checkOnly?: boolean
-    // 单独加密data里面字段内容
-    ecdh?: {
-      publickey: string // 加密用的 publickey
-      type: string // data 里面要加密的字段
-    }
-    nodeKey?: string // 编辑数据时需要指定当前节点的 publicKey
-  }) {
+  sendMetaDataTx(params: SendMetaDataTxParams) {
     return new Promise<SendMetaDataTxRes>(async (resolve, reject) => {
       if (!params.payCurrency) params.payCurrency = 'BSV'
       if (typeof params.needConfirm === 'undefined') params.needConfirm = true
@@ -460,6 +446,9 @@ export class SDK {
       if (!params.encoding) params.encoding = 'UTF-8'
       const accessToken = this.getAccessToken()
       const callback = (res: MetaIdJsRes) => {
+        if (typeof res === 'string') res = JSON.parse(res)
+        if (res && res.data && res.data.usedAmount)
+          res.data.usedAmount = Math.ceil(res.data.usedAmount)
         this.callback(res, resolve, reject)
       }
       const onCancel = (res: MetaIdJsRes) => {
@@ -514,6 +503,8 @@ export class SDK {
       }
     })
   }
+
+  sendMetaDatas(params: SendMetaDataTxParams) {}
 
   ecdhDecryptData(data: {
     msg: string
@@ -727,34 +718,6 @@ export class SDK {
       resolve(res)
     }
     resolve(res)
-  }
-
-  // 文件上链
-  createMetaFileProtocol(params: CreateMetaFileFunParams) {
-    const { name, ...data } = params.data
-    const nameArry = name.split('.')
-    let node_name: string = ''
-    nameArry.map((item, index) => {
-      node_name += item
-      if (index === nameArry.length - 2) {
-        node_name += uuid()
-      }
-    })
-    return this.sendMetaDataTx({
-      nodeName: 'MetaFile',
-      brfcId: '6d3eaf759bbc',
-      path: '/Protocols/MetaFile',
-      payCurrency: 'bsv',
-      // payTo: [
-      //     { address: 'XXXXXXXXXX', amount: 1000 }
-      // ],
-      data: JSON.stringify({
-        ...data,
-        encoding: 'binary',
-        node_name
-      }),
-      needConfirm: false
-    })
   }
 
   // NFT
@@ -1287,7 +1250,7 @@ export class SDK {
         // 获取createMetaAccessContent 链上上信息的metanetId
         // @ts-ignore
         const metaAccessContentrRes: any = await this.getTxData(
-          res.data.txId
+          res.data.txId!
         ).catch(() => reject())
         if (
           metaAccessContentrRes.code === 200 &&
@@ -1310,8 +1273,8 @@ export class SDK {
             debugger
             if (response && response.code === 200) {
               resolve({
-                metaAccessContenttxId: res.data.txId,
-                metaAccessTxId: response.data.txId
+                metaAccessContenttxId: res.data.txId!,
+                metaAccessTxId: response.data.txId!
               })
             }
           }, 10000)
@@ -1488,6 +1451,191 @@ export class SDK {
       }
     })
   }
+
+  // 文件上链
+  async createMetaFileProtocol(
+    file: CreateMetaFileFunParams,
+    option?: CreateMetaFileProtocolOption
+  ) {
+    if (file && file.data instanceof ArrayBuffer) {
+      let buffer = Buffer.from(file.data)
+      file.data = buffer.toString('hex')
+    }
+    return this.sendMetaDataTx({
+      nodeName: file.name!,
+      brfcId: 'fcac10a5ed83',
+      version: '1.0.1',
+      path: '/Protocols/MetaFile',
+      data: file.data!,
+      dataType: file.data_type,
+      encrypt: file.encrypt,
+      ...option
+    })
+  }
+
+  /* 
+  
+  */
+  sendMetaFile(
+    file: File,
+    option?: {
+      encrypt: Encrypt
+      checkOnly: boolean
+      platformFee?: number
+    }
+  ) {
+    return new Promise<SendMetaFileRes>(async (reslove, reject) => {
+      option = {
+        encrypt: Encrypt.No,
+        checkOnly: false,
+        ...option
+      }
+      // @ts-ignore
+      const md5 = MD5(file)
+      // @ts-ignore
+      const sha256 = SHA256(file)
+      const uploadFileList: CreateMetaFileFunParams[] = [] // 需要上传的文件列表
+      // 判断文件大小
+      if (file.size > METAFILE_SLICE_SIZE) {
+        // 分片个数
+        const sliceNumber = Math.ceil(file.size / METAFILE_SLICE_SIZE)
+        for (let i = 0; i < sliceNumber; ++i) {
+          // 计算分片起始位置
+          const start = i * METAFILE_SLICE_SIZE
+          // 计算分片结束位置
+          const end = start + METAFILE_SLICE_SIZE
+          // 最后一片特殊处理
+          // if (end > fileSize) {
+          //   end = fileSize
+          // }
+          const sliceBolb = file.slice(start, end)
+          const sliceBolbReader = await blobToHex(sliceBolb)
+          if (sliceBolbReader.result) {
+            uploadFileList.push({
+              data_type: 'metafile/chunk',
+              data: sliceBolbReader.result,
+              name: `${sha256}_${i}`,
+              encrypt: option.encrypt
+            })
+          }
+        }
+      } else {
+        // 单个小于1m 文件上传
+        const fileReader = await blobToHex(file)
+        if (fileReader.result) {
+          uploadFileList.push({
+            data_type: file.type,
+            data: fileReader.result,
+            name: file.name,
+            encrypt: option.encrypt
+          })
+        }
+      }
+      const chunkList: { sha256: string; txid: string }[] = [] //分片列表
+      let usedAmount = 0 // 需要花费的价格
+      const totalUploadTask =
+        uploadFileList.length > 1
+          ? uploadFileList.length + 1
+          : uploadFileList.length
+      // 开始上传
+      const payTo: PayToItem[] = option.platformFee
+        ? [{ address: this.getAppAddress(), amount: option.platformFee }]
+        : []
+      let isAllSuccess = true
+      for (let i = 0; i < uploadFileList.length; i++) {
+        try {
+          const res = await this.createMetaFileProtocol(uploadFileList[i], {
+            checkOnly: option.checkOnly,
+            needConfirm: false,
+            payTo: uploadFileList.length === 1 ? payTo : []
+          })
+          if (res.code === 200 || res.code === 205) {
+            if (option.checkOnly) {
+              // @ts-ignore
+              const amount = parseInt(res.data.usedAmount!)
+              usedAmount += amount
+              // 组装假数据
+              if (i === 0) {
+                for (let o = 0; o < uploadFileList.length; o++) {
+                  chunkList.push({
+                    // @ts-ignore
+                    sha256: SHA256(uploadFileList[o].data),
+                    txid: `metafile://${res.data.txId}`
+                  })
+                }
+              }
+              // 片段的价格 = 第一个价格 * （片段片段数 - 1） + 最后一个片段价格
+              if (uploadFileList.length > 1 && i === 0) {
+                usedAmount = usedAmount * (uploadFileList.length - 1)
+                if (i === 0 && uploadFileList.length > 2) {
+                  //直接跳去计算最后一个
+                  i = uploadFileList.length - 2
+                }
+              }
+            } else {
+              chunkList.push({
+                // @ts-ignore
+                sha256: SHA256(uploadFileList[i].data),
+                txid: `metafile://${res.data.txId}`
+              })
+            }
+            if (!option.checkOnly) {
+              reslove({
+                progressRate: parseFloat(
+                  (((i + 1) / uploadFileList.length) * 100).toFixed(2)
+                ),
+                ...res.data
+              })
+            }
+          }
+        } catch (error) {
+          isAllSuccess = false
+          reject('upload fail')
+          break
+        }
+      }
+
+      if (isAllSuccess) {
+        // 上传 metafile/index
+        if (uploadFileList.length > 1) {
+          const res = await this.createMetaFileProtocol(
+            {
+              encrypt: option.encrypt,
+              data: JSON.stringify({
+                md5: md5,
+                sha256: sha256,
+                fileSize: file.size,
+                chunkNumber: uploadFileList.length,
+                chunkSize: METAFILE_SLICE_SIZE,
+                dataType: file.type,
+                name: file.name,
+                chunkList
+              })
+            },
+            {
+              checkOnly: option.checkOnly,
+              needConfirm: false,
+              payTo
+            }
+          )
+          if (res.code === 200 || res.code === 205) {
+            if (option.checkOnly) {
+              usedAmount += res.data.usedAmount!
+              reslove({
+                ...res.data,
+                usedAmount
+              })
+            } else {
+              reslove({
+                progressRate: 100,
+                ...res.data
+              })
+            }
+          }
+        }
+      }
+    })
+  }
 }
 
 //hex格式转为Base64
@@ -1512,6 +1660,19 @@ export function hexToBase64(hex: string, fileType = 'image/png') {
     binary += String.fromCharCode(bytes[i])
   }
   return `data:${fileType};base64,` + window.btoa(binary)
+}
+
+export function blobToHex(bolb: globalThis.Blob) {
+  return new Promise<FileReader>((resolve, rject) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      resolve(reader)
+    }
+    reader.onerror = (error) => {
+      rject(error)
+    }
+    reader.readAsArrayBuffer(bolb)
+  })
 }
 
 export function toTxLink(txId: string) {

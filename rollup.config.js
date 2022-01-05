@@ -9,7 +9,7 @@ export default {
   input: ['./src/sdk.ts'],
   output: {
     file: './dist/sdk.min.js',
-    format: 'esm',
+    format: 'umd',
     name: 'SDK'
   },
   external: [],

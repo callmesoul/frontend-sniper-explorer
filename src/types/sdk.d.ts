@@ -59,13 +59,11 @@ export interface NftFunParams {
   accessToken: string
 }
 
-export interface CreateMetaFileFunParams extends NftFunParams {
-  data: {
-    name: string
-    data: string
-    encrypt: string
-    data_type: string
-  }
+export interface CreateMetaFileFunParams {
+  name?: string
+  data: string | ArrayBuffer
+  encrypt: string
+  data_type?: string
 }
 export interface MetaIdJsRes {
   code: number
@@ -85,13 +83,14 @@ export interface SdkGenesisNFTRes extends MetaIdJsRes {
 }
 
 export interface SendMetaDataTxRes extends MetaIdJsRes {
-  data: {
-    txId: string
-    // checkOnly = true
-    usedAmount?: number
-    usedAmountCent?: number
-    nodeAddress?: string
-  }
+  data: SendMetaDataTxResData
+}
+
+export interface SendMetaDataTxResData {
+  txId?: string
+  usedAmount?: number
+  usedAmountCent?: number
+  nodeAddress?: string
 }
 
 export interface CreateNFTParams extends NFTGenesisParams, NFTIssueParams {
@@ -376,4 +375,51 @@ export interface AppMsg {
   website: string
   mode: AppMode
   isProduction?: boolean // 保留 isProduction 兼容旧版本
+}
+
+export interface SendMetaDataTxParams extends CreateMetaFileProtocolOption {
+  data: string | ArrayBuffer
+  nodeName: string
+  brfcId: string // 	协议 Id
+  attachments?: string[]
+  path: string
+  payCurrency?: string
+  payTo?: { amount: number; address: string }[]
+  needConfirm?: boolean
+  encrypt?: Encrypt
+  dataType?: string
+  encoding?: string
+  checkOnly?: boolean
+  // 单独加密data里面字段内容
+  ecdh?: {
+    publickey: string // 加密用的 publickey
+    type: string // data 里面要加密的字段
+  }
+  nodeKey?: string // 编辑数据时需要指定当前节点的 publicKey
+  version?: string // 对应 metaID version
+}
+
+export interface CreateMetaFileProtocolOption {
+  nodeName?: string
+  brfcId?: string // 	协议 Id
+  attachments?: string[]
+  path?: string
+  payCurrency?: string
+  payTo?: { amount: number; address: string }[]
+  needConfirm?: boolean
+  encrypt?: Encrypt
+  dataType?: string
+  encoding?: string
+  checkOnly?: boolean
+  // 单独加密data里面字段内容
+  ecdh?: {
+    publickey: string // 加密用的 publickey
+    type: string // data 里面要加密的字段
+  }
+  nodeKey?: string // 编辑数据时需要指定当前节点的 publicKey
+  version?: string // 对应 metaID version
+}
+
+export interface SendMetaFileRes extends SendMetaDataTxResData {
+  progressRate?: number // 上传的进度百分比
 }
