@@ -1943,10 +1943,10 @@ md5.js@^1.3.4:
     inherits "^2.0.1"
     safe-buffer "^5.1.2"
 
-metaidjs@1.8.1:
-  version "1.8.1"
-  resolved "https://registry.npmmirror.com/metaidjs/download/metaidjs-1.8.1.tgz?cache=0&sync_timestamp=1632708325358&other_urls=https%3A%2F%2Fregistry.npmmirror.com%2Fmetaidjs%2Fdownload%2Fmetaidjs-1.8.1.tgz#760c375b3b2220a0157935a95be9ae04ec6e2ba5"
-  integrity sha1-dgw3WzsiIKAVeTWpW+muBOxuK6U=
+metaidjs@1.12.0:
+  version "1.12.0"
+  resolved "https://registry.npmmirror.com/metaidjs/download/metaidjs-1.12.0.tgz#d22e5df46d5e8e55e5abaa18c12c7394eed3d0df"
+  integrity sha512-86OTousM6hdd0xidfNphmfLfJmRdfS/Bwg1it/9lE2z1XztRlkoTjH2eUn+ahHUbrXNr5rqEC1aD0+NiYmX9dw==
 
 miller-rabin@^4.0.0:
   version "4.0.1"
