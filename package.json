@@ -44,7 +44,7 @@
     "crypto-js": "^4.1.1",
     "decimal.js-light": "^2.5.1",
     "dotwallet-jssdk": "^1.2.7",
-    "metaidjs": "1.12.0",
+    "metaidjs": "^1.15.0",
     "qs": "^6.10.1",
     "uuid": "^8.3.2"
   }
