@@ -148,6 +148,14 @@ export interface NftBuyResData extends MetaIdJsRes {
 
 export interface NftSellResData extends MetaIdJsRes {
   data: {
+    message: string,
+    txId: string,
+    transactionHex: string,
+    fee: number
+  }
+}
+export interface PaytoResData extends MetaIdJsRes {
+  data: {
     sellTxHex: string
     sellTxId: string
     txHex: string
@@ -222,6 +230,13 @@ export interface NftSellParams {
   sensibleId: string
   sellDesc: string
   checkOnly?: boolean
+}
+export interface PaytoParams {
+  checkOnly: boolean
+  to: string
+  amount: number
+  currency: string
+  opReturn: string
 }
 
 export interface SellNFTParams extends NftSellParams {}

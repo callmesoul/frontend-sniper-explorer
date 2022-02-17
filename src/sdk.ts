@@ -33,7 +33,9 @@ import {
   AppMsg,
   SendMetaDataTxParams,
   CreateMetaFileProtocolOption,
-  SendMetaFileRes
+  SendMetaFileRes,
+  PaytoParams,
+  PaytoResData
 } from './types/sdk'
 import { AppMode, Encrypt, Lang, PayToAddressCurrency, SdkType } from './emums'
 import { Blob, Buffer } from 'buffer'
@@ -1032,6 +1034,45 @@ export class SDK {
     })
   }
 
+  // 转账
+  paytoAddress(params: PaytoParams) {
+    return new Promise<PaytoResData>((resolve, reject) => {
+      const callback = (res: MetaIdJsRes) => {
+        this.callback(res, resolve, reject)
+      }
+      const _params = {
+        data: {
+          ...params,
+        },
+        callback
+      }
+      if (this.isApp) {
+        const accessToken = this.getAccessToken()
+        const functionName: string = `paytoAddress${randomString()}`
+        // @ts-ignore
+        window[functionName] = callback
+        // @ts-ignore
+        if (window.appMetaIdJsV2) {
+          // @ts-ignore
+          window.appMetaIdJsV2.paytoAddress(
+            accessToken,
+            JSON.stringify(_params.data),
+            functionName
+          )
+        } else {
+          // @ts-ignore
+          window.appMetaIdJs.paytoAddress(
+            accessToken,
+            JSON.stringify(_params.data),
+            functionName
+          )
+        }
+      } else {
+        // @ts-ignore
+        this.metaidjs?.paytoAddress(_params)
+      }
+    })
+  }
   // nft 上架/销售
   nftSell(params: NftSellParams) {
     return new Promise<NftSellResData>((resolve, reject) => {
