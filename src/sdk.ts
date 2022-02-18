@@ -1040,14 +1040,15 @@ export class SDK {
       const callback = (res: MetaIdJsRes) => {
         this.callback(res, resolve, reject)
       }
+      const accessToken = this.getAccessToken()
       const _params = {
-        data: {
+        accessToken,
+        data: JSON.stringify({
           ...params,
-        },
+        }),
         callback
       }
       if (this.isApp) {
-        const accessToken = this.getAccessToken()
         const functionName: string = `paytoAddress${randomString()}`
         // @ts-ignore
         window[functionName] = callback
