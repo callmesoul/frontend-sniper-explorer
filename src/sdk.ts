@@ -1044,7 +1044,7 @@ export class SDK {
       const _params = {
         accessToken,
         data: JSON.stringify({
-          ...params,
+          ...params
         }),
         callback
       }
@@ -1184,6 +1184,44 @@ export class SDK {
                 resolve(
                   new Decimal(mc.balance + mc.pendingBalance)
                     .div(Math.pow(10, mc.decimal))
+                    .toNumber()
+                )
+              } else {
+                resolve(0)
+              }
+            } else {
+              resolve(0)
+            }
+          } else {
+            reject('getMc')
+          }
+        })
+        .catch(() => {
+          reject('getMc')
+        })
+    })
+  }
+
+  // 获取某个FT 余额
+  getFT(params: { address: string; codehash: string; genesis: string }) {
+    return new Promise<number>((resolve, reject) => {
+      fetch(`https://api.sensiblequery.com/ft/summary/${params.address}`)
+        .then(function (response) {
+          return response.json()
+        })
+        .then((response: GetMcRes) => {
+          if (response.code === 0) {
+            if (response.data) {
+              const ft = response.data.find((item) => {
+                return (
+                  item.codehash === params.codehash &&
+                  item.genesis === params.genesis
+                )
+              })
+              if (ft) {
+                resolve(
+                  new Decimal(ft.balance + ft.pendingBalance)
+                    .div(Math.pow(10, ft.decimal))
                     .toNumber()
                 )
               } else {
