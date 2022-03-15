@@ -148,9 +148,9 @@ export interface NftBuyResData extends MetaIdJsRes {
 
 export interface NftSellResData extends MetaIdJsRes {
   data: {
-    message: string,
-    txId: string,
-    transactionHex: string,
+    message: string
+    txId: string
+    transactionHex: string
     fee: number
   }
 }
@@ -437,4 +437,12 @@ export interface CreateMetaFileProtocolOption {
 
 export interface SendMetaFileRes extends SendMetaDataTxResData {
   progressRate?: number // 上传的进度百分比
+}
+
+export interface GetNFTCountRes extends ApiResponse {
+  data: {
+    address: string
+    count: number
+    pendingCount: number
+  }
 }

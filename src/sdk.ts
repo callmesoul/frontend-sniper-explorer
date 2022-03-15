@@ -35,7 +35,8 @@ import {
   CreateMetaFileProtocolOption,
   SendMetaFileRes,
   PaytoParams,
-  PaytoResData
+  PaytoResData,
+  GetNFTCountRes
 } from './types/sdk'
 import { AppMode, Encrypt, Lang, PayToAddressCurrency, SdkType } from './emums'
 import { Blob, Buffer } from 'buffer'
@@ -1236,6 +1237,31 @@ export class SDK {
         })
         .catch(() => {
           reject('getMc')
+        })
+    })
+  }
+
+  getNFTCount(params: { address: string; codehash: string; genesis: string }) {
+    return new Promise<number>((resolve, reject) => {
+      fetch(
+        `https://api.sensiblequery.com/nft/detail/${params.codehash}/${params.genesis}/${params.address}`
+      )
+        .then(function (response) {
+          return response.json()
+        })
+        .then((response: GetNFTCountRes) => {
+          if (response.code === 0) {
+            if (response.data) {
+              resolve(response.data.count + response.data.pendingCount)
+            } else {
+              resolve(0)
+            }
+          } else {
+            reject('getNFTCount error')
+          }
+        })
+        .catch(() => {
+          reject('getNFTCount error')
         })
     })
   }
