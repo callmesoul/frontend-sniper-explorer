@@ -1751,14 +1751,14 @@ export class SDK {
     brfcId: string
     path: string
     needConfirm?: boolean
+    version?: string
   }) {
     return new Promise<NFTCancelResData>((resolve, reject) => {
+      if (!params.version) params.version = '1.0.0'
       const callback = (res: MetaIdJsRes) => {
         this.callback(res, resolve, reject)
       }
       if (this.isApp) {
-        alert('App 暂未支持')
-        return
         const accessToken = this.getAccessToken()
         const functionName: string = `createBrfcProtocolNode${randomString()}`
         // @ts-ignore
