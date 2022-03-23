@@ -733,7 +733,7 @@ export class SDK {
     parentReject?: any
   ) {
     return new Promise<void>((resolve, reject) => {
-      fetch(`https://api.sensible.satoplay.cn/tx/${txId}`)
+      fetch(`https://api.sensiblequery.showpay.top/tx/${txId}`)
         .then(function (response) {
           return response.json()
         })
@@ -1766,14 +1766,14 @@ export class SDK {
         // @ts-ignore
         if (window.appMetaIdJsV2) {
           // @ts-ignore
-          window.appMetaIdJsV2.nftCancel(
+          window.appMetaIdJsV2.createBrfcProtocolNode(
             accessToken,
             JSON.stringify(params),
             functionName
           )
         } else {
           // @ts-ignore
-          window.appMetaIdJs.nftCancel(
+          window.appMetaIdJs.createBrfcProtocolNode(
             accessToken,
             JSON.stringify(params),
             functionName
