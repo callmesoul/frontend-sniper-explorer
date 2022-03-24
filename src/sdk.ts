@@ -1789,6 +1789,27 @@ export class SDK {
       }
     })
   }
+
+  async addPayLikeProtocol(params: {
+    receiveAddress: string
+    amount?: number
+    txId: string
+  }) {
+    if (!params.amount) params.amount = 1000
+    return this.sendMetaDataTx({
+      brfcId: 'b4a118f94cf2',
+      nodeName: 'PayLike',
+      path: '/Protocols/PayLike',
+      data: JSON.stringify({
+        createTime: new Date().getTime(),
+        isLike: 1,
+        likeTo: params.txId,
+        pay: params.amount,
+        payTo: params.receiveAddress
+      }),
+      payTo: [{ address: params.receiveAddress, amount: params.amount }]
+    })
+  }
 }
 
 //hex格式转为Base64
