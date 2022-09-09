@@ -6,11 +6,11 @@ import builtins from 'rollup-plugin-node-builtins'
 import globals from 'rollup-plugin-node-globals'
 
 export default {
-  input: ['./src/sdk.ts'],
+  input: ['./src/request-sdk.ts'],
   output: {
-    file: './dist/sdk.min.js',
-    format: 'esm',
-    name: 'SDK'
+    file: './dist/request-sdk.min.js',
+    format: 'umd',
+    name: 'request-sdk'
   },
   external: [],
   plugins: [
