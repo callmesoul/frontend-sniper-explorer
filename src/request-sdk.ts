@@ -50,30 +50,7 @@ export default class HttpRequest {
         if (params?.errorHandel) {
           return params.errorHandel(error)
         } else {
-          let message
-          if (error.response) {
-            if (error.response.data.error_description) {
-              message = error.response.data.error_description
-            } else if (
-              error.response.data.message &&
-              error.response.data.message !== ''
-            ) {
-              message = error.response.data.message
-            } else if (
-              error.response.data.error &&
-              error.response.data.error !== ''
-            ) {
-              message = error.response.data.error
-            }
-          } else {
-            message = error.message
-          }
-          if (message) {
-            return Promise.reject(new Error(message))
-          } else {
-            // 对响应错误做点什么
-            return Promise.reject(error)
-          }
+          return Promise.reject(error)
         }
       }
     )
