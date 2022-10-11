@@ -1,6 +1,6 @@
 {
   "name": "request-sdk",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "show axios request sdk",
   "main": "dist/request-sdk.min.js",
   "typings": "src/index.d.ts",
