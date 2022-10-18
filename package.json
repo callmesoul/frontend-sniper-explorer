@@ -1,9 +1,9 @@
 {
   "name": "request-sdk",
-  "version": "0.0.3",
+  "version": "0.0.8",
   "description": "show axios request sdk",
   "main": "dist/request-sdk.min.js",
-  "typings": "src/index.d.ts",
+  "typings": "src/request-sdk.ts",
   "directories": {
     "example": "example"
   },
@@ -30,6 +30,7 @@
     "rollup-plugin-json": "^4.0.0",
     "rollup-plugin-node-builtins": "^2.1.2",
     "rollup-plugin-node-globals": "^1.4.0",
+    "rollup-plugin-node-resolve": "^5.2.0",
     "rollup-plugin-polyfill-node": "^0.7.0",
     "rollup-plugin-typescript": "^1.0.1",
     "rollup-plugin-typescript2": "^0.31.1",

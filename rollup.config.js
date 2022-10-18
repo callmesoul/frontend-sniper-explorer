@@ -6,23 +6,24 @@ import builtins from 'rollup-plugin-node-builtins'
 import globals from 'rollup-plugin-node-globals'
 
 export default {
-  input: ['./src/request-sdk.ts'],
+  input: './src/request-sdk.ts',
   output: {
     file: './dist/request-sdk.min.js',
     format: 'umd',
-    name: 'request-sdk'
+    name: 'HttpRequest'
   },
   external: [],
   plugins: [
-    json(),
-    typescript(),
-    commonjs(),
     builtins(),
     resolve({
       jsnext: true,
       main: true,
       brower: true
     }),
+    commonjs(),
+    json(),
+    typescript(),
+
     globals()
   ]
 }
