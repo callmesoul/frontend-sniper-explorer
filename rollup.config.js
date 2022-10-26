@@ -6,11 +6,11 @@ import builtins from 'rollup-plugin-node-builtins'
 import globals from 'rollup-plugin-node-globals'
 
 export default {
-  input: './src/request-sdk.ts',
+  input: './src/index.ts',
   output: {
-    file: './dist/request-sdk.min.js',
+    file: './dist/frontend-sniper-explorer.min.js',
     format: 'umd',
-    name: 'HttpRequest'
+    name: 'FrontendSniper'
   },
   external: [],
   plugins: [
@@ -23,7 +23,6 @@ export default {
     commonjs(),
     json(),
     typescript(),
-
     globals()
   ]
 }

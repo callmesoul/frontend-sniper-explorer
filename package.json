@@ -1,9 +1,9 @@
 {
-  "name": "request-sdk",
-  "version": "0.0.8",
-  "description": "show axios request sdk",
-  "main": "dist/request-sdk.min.js",
-  "typings": "src/request-sdk.ts",
+  "name": "frontend-sniper-explorer",
+  "version": "0.0.1",
+  "description": "frontend sniper explorer",
+  "main": "dist/frontend-sniper-explorer.min.js",
+  "typings": "src/index.ts",
   "directories": {
     "example": "example"
   },
@@ -39,6 +39,6 @@
     "typescript": "^4.4.2"
   },
   "dependencies": {
-    "axios": "^0.27.2"
+    "rrweb": "^2.0.0-alpha.3"
   }
 }
